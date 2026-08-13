@@ -3,7 +3,7 @@
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/BUTR/Bannerlord.XmlSchemas/master/SubModule.xsd">
   <Id value="Druglord" />
   <Name value="Druglord" />
-  <Version value="v0.1.0" />
+  <Version value="v0.8.0" />
   <DefaultModule value="false" />
   <ModuleCategory value="Singleplayer" />
   <ModuleType value="Community" />
@@ -26,7 +26,21 @@
       <Name value="Druglord" />
       <DLLName value="Druglord.dll" />
       <SubModuleClassType value="Druglord.SubModule" />
+      <Assemblies>
+        <Assembly value="0Harmony.dll" />
+      </Assemblies>
       <Tags />
     </SubModule>
   </SubModules>
+  <Xmls>
+    <XmlNode>
+      <XmlName id="Items" path="druglord_items" />
+      <IncludedGameTypes>
+        <GameType value="Campaign" />
+        <GameType value="CampaignStoryMode" />
+        <GameType value="CustomGame" />
+        <GameType value="EditorGame" />
+      </IncludedGameTypes>
+    </XmlNode>
+  </Xmls>
 </Module>

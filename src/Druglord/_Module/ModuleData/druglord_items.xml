@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item
+    id="druglord_prototype_handgun"
+    name="{=!}Prototype Handgun"
+    is_merchandise="true"
+    body_name="bo_cross_bow_heavy"
+    mesh="crossbow_a"
+    value="2800"
+    weight="1.0"
+    appearance="0.8"
+    difficulty="0"
+    tier_override="3"
+    Type="Pistol"
+    AmmoOffset="0.0, 0.02131, 0.24650"
+    item_holsters="crossbow_back:bow_hip:mace_right_hip:bow_hip_2"
+    holster_position_shift="0.02,0,-0.4">
+    <ItemComponent>
+      <Weapon
+        weapon_class="Pistol"
+        ammo_class="Cartridge"
+        missile_speed="115"
+        accuracy="78"
+        thrust_damage="72"
+        thrust_speed="84"
+        speed_rating="72"
+        weapon_length="55"
+        ammo_limit="1"
+        thrust_damage_type="Pierce"
+        item_usage="crossbow_light"
+        reload_phase_count="2"
+        physics_material="wood_weapon"
+        center_of_mass="0,0,0.4">
+        <WeaponFlags
+          RangedWeapon="true"
+          HasString="true"
+          NotUsableWithOneHand="true"
+          TwoHandIdleOnMount="true"
+          CanBeUsedWhileCrouched="true" />
+      </Weapon>
+    </ItemComponent>
+    <Flags />
+  </Item>
+
+  <Item
+    id="druglord_prototype_rifle"
+    name="{=!}Prototype Rifle"
+    is_merchandise="true"
+    body_name="bo_cross_bow_heavy"
+    mesh="crossbow_a"
+    value="5200"
+    weight="3.0"
+    appearance="0.9"
+    difficulty="0"
+    tier_override="4"
+    Type="Musket"
+    AmmoOffset="0.0, 0.02131, 0.24650"
+    item_holsters="crossbow_back:bow_hip:mace_right_hip:bow_hip_2"
+    holster_position_shift="0.02,0,-0.4">
+    <ItemComponent>
+      <Weapon
+        weapon_class="Musket"
+        ammo_class="Cartridge"
+        missile_speed="155"
+        accuracy="90"
+        thrust_damage="98"
+        thrust_speed="76"
+        speed_rating="52"
+        weapon_length="130"
+        ammo_limit="30"
+        thrust_damage_type="Pierce"
+        item_usage="crossbow_light"
+        reload_phase_count="2"
+        physics_material="wood_weapon"
+        center_of_mass="0,0,0.4">
+        <WeaponFlags
+          RangedWeapon="true"
+          HasString="true"
+          NotUsableWithOneHand="true"
+          TwoHandIdleOnMount="true"
+          CantReloadOnHorseback="true"
+          CanBeUsedWhileCrouched="true" />
+      </Weapon>
+    </ItemComponent>
+    <Flags />
+  </Item>
+
+  <Item
+    id="druglord_cartridge"
+    name="{=!}Cartridges"
+    is_merchandise="true"
+    body_name="bo_sling_ammo"
+    holster_body_name="bo_axe_short"
+    flying_mesh="sling_ammo_flying"
+    mesh="sling_ammo"
+    holster_mesh="stone_holster"
+    holster_mesh_with_weapon="stone_holster"
+    value="320"
+    weight="0.04"
+    appearance="0.8"
+    tier_override="3"
+    Type="Bullets"
+    item_holsters="throwing_stone:throwing_stone_2">
+    <ItemComponent>
+      <Weapon
+        weapon_class="Cartridge"
+        stack_amount="120"
+        physics_material="missile"
+        accuracy="100"
+        thrust_speed="0"
+        speed_rating="0"
+        missile_speed="10"
+        weapon_length="5"
+        thrust_damage="8"
+        thrust_damage_type="Pierce"
+        item_usage=""
+        passby_sound_code="event:/mission/combat/missile/passby">
+        <WeaponFlags
+          FirearmAmmo="true"
+          AttachAmmoToVisual="true"
+          Consumable="true"
+          AmmoBreaksOnBounceBack="true" />
+      </Weapon>
+    </ItemComponent>
+    <Flags
+      ForceAttachOffHandPrimaryItemBone="true" />
+  </Item>
+</Items>
