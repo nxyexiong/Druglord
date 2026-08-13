@@ -1,0 +1,14 @@
+.idea/
+.vs/
+.vscode/
+
+artifacts/
+bin/
+obj/
+Directory.Build.props.user
+
+*.suo
+*.user
+*.userprefs
+*.DotSettings.user
+TestResults/

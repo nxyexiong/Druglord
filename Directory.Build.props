@@ -1,0 +1,11 @@
+<Project>
+  <Import
+    Project="$(MSBuildThisFileDirectory)Directory.Build.props.user"
+    Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.props.user')" />
+
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT' and '$(BannerlordGameDir)' == ''">
+    <SteamInstallPath>$([MSBuild]::GetRegistryValue('HKEY_CURRENT_USER\Software\Valve\Steam', 'SteamPath'))</SteamInstallPath>
+    <BannerlordSteamCandidate>$(SteamInstallPath)\steamapps\common\Mount &amp; Blade II Bannerlord</BannerlordSteamCandidate>
+    <BannerlordGameDir Condition="Exists('$(BannerlordSteamCandidate)')">$(BannerlordSteamCandidate)</BannerlordGameDir>
+  </PropertyGroup>
+</Project>

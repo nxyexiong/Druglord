@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <BannerlordGameDir>C:\Path\To\Mount &amp; Blade II Bannerlord</BannerlordGameDir>
+  </PropertyGroup>
+</Project>
