@@ -46,8 +46,6 @@ internal sealed class RifleControlMissionLogic : MissionLogic
     private float _firingCompletionTime;
     private float _nextShotTime;
     private float _reloadCompletionTime;
-    private Vec3 _cameraPosition;
-    private Vec3 _cameraDirection;
     private MissionScreen? _missionScreen;
     private RifleSettings? _activeSettings;
     private string _activeRifleName = "Rifle";
@@ -137,8 +135,6 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         SuppressNativeRifleControls(mainAgent);
 
         _missionScreen = missionScreen;
-        _cameraPosition = missionScreen.CombatCamera.Position;
-        _cameraDirection = missionScreen.CombatCamera.Direction;
         _aimHeld =
             input.IsKeyDown(InputKey.RightMouseButton) ||
             input.IsGameKeyDown(10);
@@ -340,12 +336,12 @@ internal sealed class RifleControlMissionLogic : MissionLogic
             return;
         }
 
-        Vec3 cameraDirection = _cameraDirection;
-        cameraDirection.Normalize();
-        Vec3 position = agent.GetEyeGlobalPosition();
-        Vec3 aimPoint = _cameraPosition + cameraDirection * 1000f;
-        Vec3 direction = aimPoint - position;
-        direction.Normalize();
+        Vec3 position = GetMuzzlePosition(
+            agent,
+            rifleSlot,
+            rifle.Item.MultiMeshName,
+            settings);
+        Vec3 direction = GetConstrainedAimDirection(agent);
 
         int recoilShotCount = UpdateRecoilShotCount();
         float recoilIntensity = GetRecoilIntensity(recoilShotCount);
@@ -602,6 +598,206 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         return input.IsKeyPressed(InputKey.LeftMouseButton) ||
                input.IsGameKeyPressed(9);
     }
+
+    private static Vec3 GetMuzzlePosition(
+        Agent agent,
+        EquipmentIndex rifleSlot,
+        string metaMeshName,
+        RifleSettings settings)
+    {
+        WeakGameEntity visualRoot =
+            agent.GetWeaponEntityFromEquipmentSlot(rifleSlot);
+        if (!visualRoot.IsValid)
+        {
+            throw new InvalidOperationException(
+                "Druglord could not resolve the rifle visual root.");
+        }
+
+        MatrixFrame rootFrame = visualRoot.GetGlobalFrame();
+        for (int index = 0;
+             index < visualRoot.MultiMeshComponentCount;
+             index++)
+        {
+            MetaMesh metaMesh = visualRoot.GetMetaMesh(index);
+            if (!string.Equals(
+                    metaMesh.GetName(),
+                    metaMeshName,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            MatrixFrame metaMeshFrame = metaMesh.Frame;
+            for (int meshIndex = 0;
+                 meshIndex < metaMesh.MeshCount;
+                 meshIndex++)
+            {
+                Mesh mesh = metaMesh.GetMeshAtIndex(meshIndex);
+                if (mesh.Name.IndexOf(
+                        ".lod",
+                        StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                Material material = mesh.GetMaterial();
+                if (material is null ||
+                    !string.Equals(
+                        material.Name,
+                        settings.MuzzleMeshMaterial,
+                        StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                BoundingBox bounds = new BoundingBox(
+                    mesh.GetBoundingBoxMin());
+                bounds.max = mesh.GetBoundingBoxMax();
+                bounds.center = (bounds.min + bounds.max) * 0.5f;
+
+                Vec3 localMuzzlePosition =
+                    GetFaceCenter(bounds, settings.MuzzleFace) +
+                    settings.MuzzleOffset;
+                MatrixFrame meshFrame = mesh.GetLocalFrame();
+                return TransformWeaponPoint(
+                    rootFrame,
+                    metaMeshFrame,
+                    meshFrame,
+                    localMuzzlePosition);
+            }
+
+            throw new InvalidOperationException(
+                $"Druglord could not find muzzle material " +
+                $"'{settings.MuzzleMeshMaterial}' on rifle mesh " +
+                $"'{metaMeshName}'.");
+        }
+
+        throw new InvalidOperationException(
+            $"Druglord could not find rifle mesh '{metaMeshName}' " +
+            "on the agent visual root.");
+    }
+
+    private static Vec3 GetConstrainedAimDirection(Agent agent)
+    {
+        Vec3 aimDirection = agent.LookDirection;
+        aimDirection.Normalize();
+
+        if (!agent.HasMount)
+        {
+            return aimDirection;
+        }
+
+        Vec2 bodyRotationConstraint =
+            agent.GetBodyRotationConstraint(1);
+        bool constraintIsActive =
+            bodyRotationConstraint.x < -0.1f ||
+            bodyRotationConstraint.y > 0.1f;
+        if (!constraintIsActive)
+        {
+            return aimDirection;
+        }
+
+        Vec2 movementDirection = agent.GetMovementDirection();
+        Vec2 horizontalAim = aimDirection.AsVec2;
+        if (!movementDirection.IsNonZero() ||
+            !horizontalAim.IsNonZero())
+        {
+            return aimDirection;
+        }
+
+        float movementAngle = movementDirection.RotationInRadians;
+        float relativeAimAngle = MBMath.WrapAngle(
+            horizontalAim.RotationInRadians - movementAngle);
+        if (MBMath.IsBetween(
+                relativeAimAngle,
+                bodyRotationConstraint.x,
+                bodyRotationConstraint.y))
+        {
+            return aimDirection;
+        }
+
+        float distanceToMinimum =
+            TaleWorlds.Library.MathF.Abs(
+                MBMath.WrapAngle(
+                    relativeAimAngle -
+                    bodyRotationConstraint.x));
+        float distanceToMaximum =
+            TaleWorlds.Library.MathF.Abs(
+                MBMath.WrapAngle(
+                    relativeAimAngle -
+                    bodyRotationConstraint.y));
+        float constrainedRelativeAngle =
+            distanceToMinimum <= distanceToMaximum
+                ? bodyRotationConstraint.x
+                : bodyRotationConstraint.y;
+        Vec2 constrainedHorizontal = Vec2.FromRotation(
+            movementAngle + constrainedRelativeAngle);
+        constrainedHorizontal *= horizontalAim.Length;
+
+        Vec3 constrainedAim = new Vec3(
+            constrainedHorizontal.x,
+            constrainedHorizontal.y,
+            aimDirection.z);
+        constrainedAim.Normalize();
+        return constrainedAim;
+    }
+
+    private static Vec3 TransformWeaponPoint(
+        MatrixFrame rootFrame,
+        MatrixFrame metaMeshFrame,
+        MatrixFrame meshFrame,
+        Vec3 point)
+    {
+        Vec3 meshPosition = meshFrame.TransformToParent(point);
+        Vec3 metaMeshPosition =
+            metaMeshFrame.TransformToParent(meshPosition);
+        return rootFrame.TransformToParent(metaMeshPosition);
+    }
+
+    private static Vec3 GetFaceCenter(
+        BoundingBox bounds,
+        RifleMuzzleFace face)
+    {
+        switch (face)
+        {
+        case RifleMuzzleFace.MinX:
+            return new Vec3(
+                bounds.min.x,
+                bounds.center.y,
+                bounds.center.z);
+        case RifleMuzzleFace.MaxX:
+            return new Vec3(
+                bounds.max.x,
+                bounds.center.y,
+                bounds.center.z);
+        case RifleMuzzleFace.MinY:
+            return new Vec3(
+                bounds.center.x,
+                bounds.min.y,
+                bounds.center.z);
+        case RifleMuzzleFace.MaxY:
+            return new Vec3(
+                bounds.center.x,
+                bounds.max.y,
+                bounds.center.z);
+        case RifleMuzzleFace.MinZ:
+            return new Vec3(
+                bounds.center.x,
+                bounds.center.y,
+                bounds.min.z);
+        case RifleMuzzleFace.MaxZ:
+            return new Vec3(
+                bounds.center.x,
+                bounds.center.y,
+                bounds.max.z);
+        default:
+            throw new ArgumentOutOfRangeException(
+                nameof(face),
+                face,
+                "Unknown rifle muzzle face.");
+        }
+    }
+
 
     private int UpdateRecoilShotCount()
     {

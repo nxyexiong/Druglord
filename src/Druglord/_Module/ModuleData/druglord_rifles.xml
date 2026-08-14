@@ -16,5 +16,8 @@
     maximum_vertical_kick_degrees="0.9"
     maximum_horizontal_kick_degrees="0.35"
     minimum_spread_degrees="0.05"
-    maximum_spread_degrees="1.5" />
+    maximum_spread_degrees="1.5"
+    muzzle_mesh_material="druglord_akm_body"
+    muzzle_face="MaxZ"
+    muzzle_offset="0.0,0.0,-1.00" />
 </Rifles>

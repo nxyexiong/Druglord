@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 using TaleWorlds.Core;
+using TaleWorlds.Library;
 using TaleWorlds.ModuleManager;
 
 namespace Druglord;
@@ -12,6 +13,16 @@ internal enum RifleFireMode
 {
     Automatic,
     SemiAutomatic
+}
+
+internal enum RifleMuzzleFace
+{
+    MinX,
+    MaxX,
+    MinY,
+    MaxY,
+    MinZ,
+    MaxZ
 }
 
 internal sealed class RifleSettings
@@ -32,7 +43,10 @@ internal sealed class RifleSettings
         float maximumVerticalKickDegrees,
         float maximumHorizontalKickDegrees,
         float minimumSpreadDegrees,
-        float maximumSpreadDegrees)
+        float maximumSpreadDegrees,
+        string muzzleMeshMaterial,
+        RifleMuzzleFace muzzleFace,
+        Vec3 muzzleOffset)
     {
         ItemId = itemId;
         AmmunitionItemId = ammunitionItemId;
@@ -50,6 +64,9 @@ internal sealed class RifleSettings
         MaximumHorizontalKickDegrees = maximumHorizontalKickDegrees;
         MinimumSpreadDegrees = minimumSpreadDegrees;
         MaximumSpreadDegrees = maximumSpreadDegrees;
+        MuzzleMeshMaterial = muzzleMeshMaterial;
+        MuzzleFace = muzzleFace;
+        MuzzleOffset = muzzleOffset;
     }
 
     internal string ItemId { get; }
@@ -68,6 +85,9 @@ internal sealed class RifleSettings
     internal float MaximumHorizontalKickDegrees { get; }
     internal float MinimumSpreadDegrees { get; }
     internal float MaximumSpreadDegrees { get; }
+    internal string MuzzleMeshMaterial { get; }
+    internal RifleMuzzleFace MuzzleFace { get; }
+    internal Vec3 MuzzleOffset { get; }
 }
 
 internal static class RifleSettingsRegistry
@@ -206,6 +226,17 @@ internal static class RifleSettingsRegistry
                 $"Unknown rifle fire mode '{fireModeText}' for '{itemId}'.");
         }
 
+        string muzzleFaceText =
+            GetRequiredAttribute(node, "muzzle_face");
+        if (!Enum.TryParse(
+                muzzleFaceText,
+                ignoreCase: true,
+                out RifleMuzzleFace muzzleFace))
+        {
+            throw new InvalidDataException(
+                $"Unknown muzzle face '{muzzleFaceText}' for '{itemId}'.");
+        }
+
         RifleSettings settings = new RifleSettings(
             itemId,
             ammunitionItemId,
@@ -222,7 +253,10 @@ internal static class RifleSettingsRegistry
             ParseSingle(node, "maximum_vertical_kick_degrees"),
             ParseSingle(node, "maximum_horizontal_kick_degrees"),
             ParseSingle(node, "minimum_spread_degrees"),
-            ParseSingle(node, "maximum_spread_degrees"));
+            ParseSingle(node, "maximum_spread_degrees"),
+            GetRequiredAttribute(node, "muzzle_mesh_material"),
+            muzzleFace,
+            Vec3.Parse(GetRequiredAttribute(node, "muzzle_offset")));
 
         ValidateValues(settings);
         return settings;

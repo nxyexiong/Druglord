@@ -62,6 +62,12 @@ Rifle behavior is data-driven through
 own ammunition, fire mode, magazine, timing, recoil, and spread values, so
 additional rifles can use the same `RifleControlMissionLogic`. Rifles marked
 `debug_loadout="true"` are distributed across debug-battle soldiers.
+Each rifle also defines its muzzle point in model-local coordinates; firing
+selects a configured material submesh and bounding-box face, transforms that
+point through the live weapon `MetaMesh`, then fires from that exact barrel
+position along Bannerlord's native character aim direction. Mounted shots
+always fire, but horizontal direction is clamped to the same body-rotation
+limits that separate the crosshair from the character's aim.
 
 Enable Bannerlord cheat mode to locate the mod items immediately in the
 inventory, or wait for merchandise refreshes to add them to shops.
