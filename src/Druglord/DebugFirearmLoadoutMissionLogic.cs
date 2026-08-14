@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
@@ -6,8 +8,25 @@ namespace Druglord;
 
 internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
 {
-    private ItemObject? _rifle;
-    private ItemObject? _cartridges;
+    private sealed class DebugLoadout
+    {
+        internal DebugLoadout(
+            RifleSettings settings,
+            ItemObject firearm,
+            ItemObject ammunition)
+        {
+            Settings = settings;
+            Firearm = firearm;
+            Ammunition = ammunition;
+        }
+
+        internal RifleSettings Settings { get; }
+        internal ItemObject Firearm { get; }
+        internal ItemObject Ammunition { get; }
+    }
+
+    private readonly List<DebugLoadout> _loadouts =
+        new List<DebugLoadout>();
     private int _equippedAgentCount;
 
     public override void OnBehaviorInitialize()
@@ -15,8 +34,28 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
         base.OnBehaviorInitialize();
 
         FirearmItemRegistry.EnsureLoaded(Game.Current);
-        _rifle = FirearmItemRegistry.Rifle;
-        _cartridges = FirearmItemRegistry.Cartridges;
+        IReadOnlyList<RifleSettings> settings =
+            RifleSettingsRegistry.GetDebugLoadouts(Game.Current);
+
+        foreach (RifleSettings rifleSettings in settings)
+        {
+            ItemObject firearm =
+                Game.Current.ObjectManager.GetObject<ItemObject>(
+                    rifleSettings.ItemId) ??
+                throw new InvalidOperationException(
+                    $"Debug firearm '{rifleSettings.ItemId}' is unavailable.");
+            ItemObject ammunition =
+                Game.Current.ObjectManager.GetObject<ItemObject>(
+                    rifleSettings.AmmunitionItemId) ??
+                throw new InvalidOperationException(
+                    $"Debug ammunition '{rifleSettings.AmmunitionItemId}' is unavailable.");
+
+            _loadouts.Add(
+                new DebugLoadout(
+                    rifleSettings,
+                    firearm,
+                    ammunition));
+        }
     }
 
     public override void OnAgentBuild(Agent agent, Banner banner)
@@ -28,17 +67,20 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
             return;
         }
 
-        if (_rifle is null || _cartridges is null)
+        if (_loadouts.Count == 0)
         {
             const string error = "Druglord debug weapons were not loaded.";
             Debug.Print($"Druglord: {error}");
             return;
         }
 
-        EquipRifleLoadout(agent);
+        DebugLoadout loadout =
+            _loadouts[_equippedAgentCount % _loadouts.Count];
+        EquipFirearmLoadout(agent, loadout);
         _equippedAgentCount++;
         Debug.Print(
-            $"Druglord: equipped rifle loadout for agent {agent.Index}; total {_equippedAgentCount}.");
+            $"Druglord: equipped {loadout.Firearm.Name} for agent " +
+            $"{agent.Index}; total {_equippedAgentCount}.");
     }
 
     public override void OnDeploymentFinished()
@@ -46,23 +88,33 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
         base.OnDeploymentFinished();
         InformationManager.DisplayMessage(
             new InformationMessage(
-                $"Druglord equipped {_equippedAgentCount} soldiers with rifles."));
+                $"Druglord equipped {_equippedAgentCount} soldiers with " +
+                $"{_loadouts.Count} debug firearm loadout(s)."));
     }
 
-    private void EquipRifleLoadout(Agent agent)
+    private static void EquipFirearmLoadout(
+        Agent agent,
+        DebugLoadout loadout)
     {
-        MissionWeapon cartridgeStack = new MissionWeapon(_cartridges, null, null);
-        MissionWeapon rifleAmmo = cartridgeStack.Consume(
-            RifleSettings.MagazineSize);
+        MissionWeapon ammunitionStack =
+            new MissionWeapon(loadout.Ammunition, null, null);
+        MissionWeapon loadedAmmunition = ammunitionStack.Consume(
+            loadout.Settings.MagazineSize);
 
-        MissionWeapon rifle = new MissionWeapon(_rifle, null, null);
-        rifle.ReloadAmmo(rifleAmmo, rifle.ReloadPhaseCount);
+        MissionWeapon firearm =
+            new MissionWeapon(loadout.Firearm, null, null);
+        firearm.ReloadAmmo(
+            loadedAmmunition,
+            firearm.ReloadPhaseCount);
 
         EquipWeapon(
             agent,
             EquipmentIndex.WeaponItemBeginSlot,
-            ref rifle);
-        EquipWeapon(agent, EquipmentIndex.Weapon1, ref cartridgeStack);
+            ref firearm);
+        EquipWeapon(
+            agent,
+            EquipmentIndex.Weapon1,
+            ref ammunitionStack);
 
         for (EquipmentIndex slot = EquipmentIndex.Weapon2;
              slot <= EquipmentIndex.Weapon3;
@@ -74,10 +126,6 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
             }
         }
 
-        agent.TryToWieldWeaponInSlot(
-            EquipmentIndex.WeaponItemBeginSlot,
-            Agent.WeaponWieldActionType.InstantAfterPickUp,
-            false);
     }
 
     private static void EquipWeapon(

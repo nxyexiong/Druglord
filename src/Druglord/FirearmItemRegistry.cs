@@ -10,7 +10,7 @@ namespace Druglord;
 internal static class FirearmItemRegistry
 {
     internal const string HandgunId = "druglord_prototype_handgun";
-    internal const string RifleId = "druglord_prototype_rifle";
+    internal const string AkmId = "druglord_akm";
     internal const string CartridgeId = "druglord_cartridge";
 
     private const string ModuleId = "Druglord";
@@ -18,14 +18,14 @@ internal static class FirearmItemRegistry
 
     private static Game? _registeredGame;
     private static ItemObject? _handgun;
-    private static ItemObject? _rifle;
+    private static ItemObject? _akm;
     private static ItemObject? _cartridges;
 
     internal static ItemObject Handgun =>
         _handgun ?? throw new InvalidOperationException("Druglord handgun is unavailable.");
 
-    internal static ItemObject Rifle =>
-        _rifle ?? throw new InvalidOperationException("Druglord rifle is unavailable.");
+    internal static ItemObject Akm =>
+        _akm ?? throw new InvalidOperationException("Druglord AKM is unavailable.");
 
     internal static ItemObject Cartridges =>
         _cartridges ?? throw new InvalidOperationException("Druglord cartridges are unavailable.");
@@ -96,24 +96,24 @@ internal static class FirearmItemRegistry
     private static bool TryResolveItems(Game game)
     {
         ItemObject? handgun = game.ObjectManager.GetObject<ItemObject>(HandgunId);
-        ItemObject? rifle = game.ObjectManager.GetObject<ItemObject>(RifleId);
+        ItemObject? akm = game.ObjectManager.GetObject<ItemObject>(AkmId);
         ItemObject? cartridges = game.ObjectManager.GetObject<ItemObject>(CartridgeId);
 
         if (handgun is null ||
-            rifle is null ||
+            akm is null ||
             cartridges is null ||
             !handgun.IsReady ||
-            !rifle.IsReady ||
+            !akm.IsReady ||
             !cartridges.IsReady)
         {
             _handgun = null;
-            _rifle = null;
+            _akm = null;
             _cartridges = null;
             return false;
         }
 
         _handgun = handgun;
-        _rifle = rifle;
+        _akm = akm;
         _cartridges = cartridges;
         return true;
     }

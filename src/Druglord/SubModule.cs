@@ -37,7 +37,7 @@ public sealed class SubModule : MBSubModuleBase
                 () => DebugBattleLauncher.IsPending
                     ? (true, new TextObject("{=!}The debug battle is loading."))
                     : (false, new TextObject(string.Empty)),
-                new TextObject("{=!}Launch a custom battle where every soldier has a rifle and ammunition.")));
+                new TextObject("{=!}Launch a custom battle where every soldier has an AKM and ammunition.")));
     }
 
     protected override void OnSubModuleUnloaded()
@@ -61,7 +61,8 @@ public sealed class SubModule : MBSubModuleBase
 
         if (DebugBattleLauncher.ConsumeLoadoutRequest())
         {
-            mission.AddMissionBehavior(new DebugFirearmLoadoutMissionLogic());
+            mission.AddMissionBehavior(
+                new DebugFirearmLoadoutMissionLogic());
         }
     }
 
@@ -69,6 +70,7 @@ public sealed class SubModule : MBSubModuleBase
     {
         base.OnGameInitializationFinished(game);
         FirearmItemRegistry.EnsureLoaded(game);
+        RifleSettingsRegistry.EnsureLoaded(game);
     }
 
     private static void ShowVersion()

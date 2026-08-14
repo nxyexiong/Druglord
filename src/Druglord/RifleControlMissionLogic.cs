@@ -49,8 +49,15 @@ internal sealed class RifleControlMissionLogic : MissionLogic
     private Vec3 _cameraPosition;
     private Vec3 _cameraDirection;
     private MissionScreen? _missionScreen;
+    private RifleSettings? _activeSettings;
+    private string _activeRifleName = "Rifle";
     private int _consecutiveShotCount;
     private float _lastShotTime = float.MinValue;
+
+    private RifleSettings Settings =>
+        _activeSettings ??
+        throw new InvalidOperationException(
+            "Druglord rifle settings are unavailable.");
 
     public RifleControlMissionLogic()
     {
@@ -60,6 +67,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
     public override void OnBehaviorInitialize()
     {
         base.OnBehaviorInitialize();
+        RifleSettingsRegistry.EnsureLoaded(Game.Current);
 
         System.Reflection.MethodInfo shootMethod = AccessTools.Method(
             typeof(Mission),
@@ -96,19 +104,34 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         Agent? mainAgent = Mission.MainAgent;
         if (mainAgent is null ||
             !mainAgent.IsActive() ||
-            !TryGetWieldedRifle(mainAgent, out EquipmentIndex rifleSlot))
+            !TryGetWieldedRifle(
+                mainAgent,
+                out EquipmentIndex rifleSlot,
+                out RifleSettings? settings) ||
+            settings is null)
         {
             OnRifleNoLongerWielded();
             return;
         }
 
+        if (!ReferenceEquals(_activeSettings, settings))
+        {
+            OnRifleNoLongerWielded();
+            _activeSettings = settings;
+            _activeRifleName =
+                mainAgent.Equipment[rifleSlot].Item.Name.ToString();
+        }
+
         if (!_wasRifleWielded)
         {
             _wasRifleWielded = true;
-            Debug.Print("Druglord: Harmony rifle input hook is active.");
+            Debug.Print(
+                $"Druglord: Harmony rifle input hook is active for " +
+                $"'{settings.ItemId}'.");
             InformationManager.DisplayMessage(
                 new InformationMessage(
-                    "Rifle: AUTO | RMB readies weapon."));
+                    $"{_activeRifleName}: {GetFireModeLabel(settings)} | " +
+                    "RMB readies weapon."));
         }
 
         SuppressNativeRifleControls(mainAgent);
@@ -121,9 +144,14 @@ internal sealed class RifleControlMissionLogic : MissionLogic
             input.IsGameKeyDown(10);
         _triggerHeld = IsAttackButtonDown(input);
         bool triggerPressed = IsAttackButtonPressed(input);
+        bool automaticTriggerHeld =
+            settings.FireMode == RifleFireMode.Automatic &&
+            _triggerHeld;
+        bool triggerRequested =
+            triggerPressed || automaticTriggerHeld;
 
         if (Mission.CurrentTime - _lastShotTime >
-            RifleSettings.RecoilResetDelay)
+            settings.RecoilResetDelay)
         {
             _consecutiveShotCount = 0;
         }
@@ -149,21 +177,20 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         {
         case WeaponState.Lowered:
             if (_aimHeld ||
-                triggerPressed ||
-                _triggerHeld)
+                triggerRequested)
             {
-                _shotQueued = triggerPressed || _triggerHeld;
+                _shotQueued = triggerRequested;
                 BeginRaise(mainAgent);
             }
             break;
 
         case WeaponState.Raising:
-            if (triggerPressed || _triggerHeld)
+            if (triggerRequested)
             {
                 _shotQueued = true;
             }
 
-            if (!_aimHeld && !_triggerHeld && !_shotQueued)
+            if (!_aimHeld && !automaticTriggerHeld && !_shotQueued)
             {
                 LowerRifle(mainAgent);
             }
@@ -177,18 +204,25 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         case WeaponState.Ready:
             MaintainReadyPose(mainAgent);
 
-            if (_triggerHeld &&
+            if ((_shotQueued || triggerRequested) &&
                 Mission.CurrentTime >= _nextShotTime)
             {
                 FireRifle(mainAgent, rifleSlot);
             }
-            else if (!_aimHeld && !_triggerHeld)
+            else if (!_aimHeld &&
+                     !automaticTriggerHeld &&
+                     !_shotQueued)
             {
                 LowerRifle(mainAgent);
             }
             break;
 
         case WeaponState.Firing:
+            if (triggerPressed)
+            {
+                _shotQueued = true;
+            }
+
             if (Mission.CurrentTime >= _firingCompletionTime)
             {
                 rifle = mainAgent.Equipment[rifleSlot];
@@ -196,7 +230,9 @@ internal sealed class RifleControlMissionLogic : MissionLogic
                 {
                     BeginReload(mainAgent);
                 }
-                else if (_aimHeld || _triggerHeld || _shotQueued)
+                else if (_aimHeld ||
+                         automaticTriggerHeld ||
+                         _shotQueued)
                 {
                     EnterReady(mainAgent);
                     TryFireQueuedShot(mainAgent, rifleSlot);
@@ -224,7 +260,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
     {
         _weaponState = WeaponState.Raising;
         _raiseCompletionTime =
-            Mission.CurrentTime + RifleSettings.RaiseDuration;
+            Mission.CurrentTime + Settings.RaiseDuration;
 
         agent.SetActionChannel(
             1,
@@ -234,7 +270,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
             blendInPeriod: 0.08f,
             blendOutPeriod: 0.08f);
 
-        Debug.Print("Druglord: rifle raising.");
+        Debug.Print($"Druglord: {_activeRifleName} raising.");
     }
 
     private bool IsRaiseComplete(Agent agent)
@@ -276,21 +312,27 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         }
     }
 
-    private void TryFireQueuedShot(Agent agent, EquipmentIndex rifleSlot)
+    private void TryFireQueuedShot(
+        Agent agent,
+        EquipmentIndex rifleSlot)
     {
         bool shouldFire =
             _shotQueued ||
-            (_triggerHeld &&
-             Mission.CurrentTime >= _nextShotTime);
+            (Settings.FireMode == RifleFireMode.Automatic &&
+             _triggerHeld);
 
-        if (shouldFire)
+        if (shouldFire &&
+            Mission.CurrentTime >= _nextShotTime)
         {
             FireRifle(agent, rifleSlot);
         }
     }
 
-    private void FireRifle(Agent agent, EquipmentIndex rifleSlot)
+    private void FireRifle(
+        Agent agent,
+        EquipmentIndex rifleSlot)
     {
+        RifleSettings settings = Settings;
         MissionWeapon rifle = agent.Equipment[rifleSlot];
         if (rifle.Ammo <= 0 || rifle.AmmoWeapon.IsEmpty)
         {
@@ -308,8 +350,8 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         int recoilShotCount = UpdateRecoilShotCount();
         float recoilIntensity = GetRecoilIntensity(recoilShotCount);
         float spreadDegrees = MathF.Lerp(
-            RifleSettings.MinimumSpreadDegrees,
-            RifleSettings.MaximumSpreadDegrees,
+            settings.MinimumSpreadDegrees,
+            settings.MaximumSpreadDegrees,
             recoilIntensity);
         float horizontalSpread =
             MBRandom.RandomFloatRanged(-spreadDegrees, spreadDegrees)
@@ -327,7 +369,8 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         direction = orientation.f;
         position += direction * 0.7f;
 
-        float missileSpeed = rifle.GetModifiedMissileSpeedForCurrentUsage();
+        float missileSpeed =
+            rifle.GetModifiedMissileSpeedForCurrentUsage();
         Vec3 velocity = direction * missileSpeed;
 
         (_shootMissile ?? throw new InvalidOperationException(
@@ -343,10 +386,8 @@ internal sealed class RifleControlMissionLogic : MissionLogic
             -1);
 
         short remainingAmmo = (short)(rifle.Ammo - 1);
-        agent.Equipment.SetConsumedAmmoOfSlot(rifleSlot, 1);
-        agent.SetWeaponAmmoAsClient(
+        agent.Equipment.SetConsumedAmmoOfSlot(
             rifleSlot,
-            EquipmentIndex.None,
             remainingAmmo);
 
         agent.SetActionChannel(
@@ -360,14 +401,16 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         _weaponState = WeaponState.Firing;
         _shotQueued = false;
         _firingCompletionTime =
-            Mission.CurrentTime + RifleSettings.RecoilDuration;
+            Mission.CurrentTime + settings.RecoilDuration;
         _nextShotTime =
-            Mission.CurrentTime + RifleSettings.AutomaticShotInterval;
+            Mission.CurrentTime + settings.ShotInterval;
         _outOfAmmoNotified = false;
         ApplyCameraRecoil(recoilIntensity);
 
         Debug.Print(
-            $"Druglord: rifle fired; magazine {remainingAmmo}/{RifleSettings.MagazineSize}; recoil {recoilShotCount}/{RifleSettings.PeakRecoilShotCount}.");
+            $"Druglord: {_activeRifleName} fired; magazine " +
+            $"{remainingAmmo}/{settings.MagazineSize}; recoil " +
+            $"{recoilShotCount}/{settings.PeakRecoilShotCount}.");
     }
 
     private void BeginReload(Agent agent)
@@ -377,13 +420,14 @@ internal sealed class RifleControlMissionLogic : MissionLogic
             return;
         }
 
-        if (!TryFindCartridgeSlot(agent, out _))
+        if (!TryFindAmmunitionSlot(agent, out _))
         {
             if (!_outOfAmmoNotified)
             {
                 _outOfAmmoNotified = true;
                 InformationManager.DisplayMessage(
-                    new InformationMessage("Rifle: out of cartridges."));
+                    new InformationMessage(
+                        $"{_activeRifleName}: out of ammunition."));
             }
 
             LowerRifle(agent);
@@ -393,7 +437,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         _weaponState = WeaponState.Reloading;
         _shotQueued = false;
         _reloadCompletionTime =
-            Mission.CurrentTime + RifleSettings.ReloadDuration;
+            Mission.CurrentTime + Settings.ReloadDuration;
 
         agent.SetActionChannel(
             1,
@@ -403,32 +447,45 @@ internal sealed class RifleControlMissionLogic : MissionLogic
             blendInPeriod: 0.05f,
             blendOutPeriod: 0.15f);
 
-        InformationManager.DisplayMessage(new InformationMessage("Rifle reloading..."));
-        Debug.Print("Druglord: rifle reload started.");
+        InformationManager.DisplayMessage(
+            new InformationMessage(
+                $"{_activeRifleName} reloading..."));
+        Debug.Print(
+            $"Druglord: {_activeRifleName} reload started.");
     }
 
-    private void CompleteReload(Agent agent, EquipmentIndex rifleSlot)
+    private void CompleteReload(
+        Agent agent,
+        EquipmentIndex rifleSlot)
     {
-        if (!TryFindCartridgeSlot(agent, out EquipmentIndex cartridgeSlot))
+        RifleSettings settings = Settings;
+        if (!TryFindAmmunitionSlot(
+                agent,
+                out EquipmentIndex ammunitionSlot))
         {
             _outOfAmmoNotified = true;
             InformationManager.DisplayMessage(
-                new InformationMessage("Rifle: out of cartridges."));
+                new InformationMessage(
+                    $"{_activeRifleName}: out of ammunition."));
             LowerRifle(agent);
             return;
         }
 
-        MissionWeapon reserve = agent.Equipment[cartridgeSlot];
+        MissionWeapon reserve = agent.Equipment[ammunitionSlot];
         short roundsToLoad = (short)Math.Min(
-            RifleSettings.MagazineSize,
+            settings.MagazineSize,
             reserve.Amount);
         MissionWeapon loadedRounds = reserve.Consume(roundsToLoad);
 
         MissionWeapon rifle = agent.Equipment[rifleSlot];
-        rifle.ReloadAmmo(loadedRounds, rifle.ReloadPhaseCount);
+        rifle.ReloadAmmo(
+            loadedRounds,
+            rifle.ReloadPhaseCount);
 
         agent.EquipWeaponWithNewEntity(rifleSlot, ref rifle);
-        agent.EquipWeaponWithNewEntity(cartridgeSlot, ref reserve);
+        agent.EquipWeaponWithNewEntity(
+            ammunitionSlot,
+            ref reserve);
         agent.TryToWieldWeaponInSlot(
             rifleSlot,
             Agent.WeaponWieldActionType.InstantAfterPickUp,
@@ -436,17 +493,22 @@ internal sealed class RifleControlMissionLogic : MissionLogic
 
         _weaponState = WeaponState.Lowered;
         _nextShotTime =
-            Mission.CurrentTime + RifleSettings.AutomaticShotInterval;
+            Mission.CurrentTime + settings.ShotInterval;
         _outOfAmmoNotified = false;
 
         InformationManager.DisplayMessage(
             new InformationMessage(
-                $"Rifle reloaded: {roundsToLoad}/{RifleSettings.MagazineSize}"));
-        Debug.Print($"Druglord: rifle reloaded with {roundsToLoad} rounds.");
+                $"{_activeRifleName} reloaded: " +
+                $"{roundsToLoad}/{settings.MagazineSize}"));
+        Debug.Print(
+            $"Druglord: {_activeRifleName} reloaded with " +
+            $"{roundsToLoad} rounds.");
 
         if (_aimHeld || _triggerHeld)
         {
-            _shotQueued = _triggerHeld;
+            _shotQueued =
+                settings.FireMode == RifleFireMode.Automatic &&
+                _triggerHeld;
             BeginRaise(agent);
         }
     }
@@ -480,14 +542,18 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         _triggerHeld = false;
         _shotQueued = false;
         _wasRifleWielded = false;
+        _activeSettings = null;
+        _activeRifleName = "Rifle";
         _consecutiveShotCount = 0;
         _missionScreen = null;
     }
 
     private static bool TryGetWieldedRifle(
         Agent agent,
-        out EquipmentIndex rifleSlot)
+        out EquipmentIndex rifleSlot,
+        out RifleSettings? settings)
     {
+        settings = null;
         rifleSlot = agent.GetPrimaryWieldedItemIndex();
         if (rifleSlot == EquipmentIndex.None)
         {
@@ -496,12 +562,15 @@ internal sealed class RifleControlMissionLogic : MissionLogic
 
         MissionWeapon weapon = agent.Equipment[rifleSlot];
         return !weapon.IsEmpty &&
-               weapon.Item.StringId == FirearmItemRegistry.RifleId;
+               RifleSettingsRegistry.TryGet(
+                   Game.Current,
+                   weapon.Item.StringId,
+                   out settings);
     }
 
-    private static bool TryFindCartridgeSlot(
+    private bool TryFindAmmunitionSlot(
         Agent agent,
-        out EquipmentIndex cartridgeSlot)
+        out EquipmentIndex ammunitionSlot)
     {
         for (EquipmentIndex slot = EquipmentIndex.WeaponItemBeginSlot;
              slot < EquipmentIndex.NumAllWeaponSlots;
@@ -509,15 +578,16 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         {
             MissionWeapon weapon = agent.Equipment[slot];
             if (!weapon.IsEmpty &&
-                weapon.Item.StringId == FirearmItemRegistry.CartridgeId &&
+                weapon.Item.StringId ==
+                    Settings.AmmunitionItemId &&
                 weapon.Amount > 0)
             {
-                cartridgeSlot = slot;
+                ammunitionSlot = slot;
                 return true;
             }
         }
 
-        cartridgeSlot = EquipmentIndex.None;
+        ammunitionSlot = EquipmentIndex.None;
         return false;
     }
 
@@ -536,7 +606,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
     private int UpdateRecoilShotCount()
     {
         if (Mission.CurrentTime - _lastShotTime >
-            RifleSettings.RecoilResetDelay)
+            Settings.RecoilResetDelay)
         {
             _consecutiveShotCount = 0;
         }
@@ -544,14 +614,14 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         _lastShotTime = Mission.CurrentTime;
         _consecutiveShotCount = Math.Min(
             _consecutiveShotCount + 1,
-            RifleSettings.PeakRecoilShotCount);
+            Settings.PeakRecoilShotCount);
         return _consecutiveShotCount;
     }
 
-    private static float GetRecoilIntensity(int shotCount)
+    private float GetRecoilIntensity(int shotCount)
     {
         return (float)(shotCount - 1) /
-               (RifleSettings.PeakRecoilShotCount - 1);
+               (Settings.PeakRecoilShotCount - 1);
     }
 
     private void ApplyCameraRecoil(float recoilIntensity)
@@ -562,18 +632,25 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         }
 
         float verticalKick = MathF.Lerp(
-            RifleSettings.MinimumVerticalKickDegrees,
-            RifleSettings.MaximumVerticalKickDegrees,
+            Settings.MinimumVerticalKickDegrees,
+            Settings.MaximumVerticalKickDegrees,
             recoilIntensity).ToRadians();
         float horizontalKick =
             MBRandom.RandomFloatRanged(
-                -RifleSettings.MaximumHorizontalKickDegrees,
-                RifleSettings.MaximumHorizontalKickDegrees) *
+                -Settings.MaximumHorizontalKickDegrees,
+                Settings.MaximumHorizontalKickDegrees) *
             recoilIntensity;
 
         HarmonyPatches.ApplyCameraRecoil(
             _missionScreen,
             verticalKick,
             horizontalKick.ToRadians());
+    }
+
+    private static string GetFireModeLabel(RifleSettings settings)
+    {
+        return settings.FireMode == RifleFireMode.Automatic
+            ? "AUTO"
+            : "SEMI";
     }
 }

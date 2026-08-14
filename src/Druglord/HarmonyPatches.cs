@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade.View.MissionViews;
 using TaleWorlds.MountAndBlade.View.Screens;
@@ -18,6 +19,17 @@ internal static class HarmonyPatches
         ApplyPostfix(
             harmony,
             AccessTools.Method(
+                typeof(WeaponComponentData),
+                nameof(WeaponComponentData.GetRelevantSkillFromWeaponClass),
+                new[] { typeof(WeaponClass) }),
+            AccessTools.Method(
+                typeof(HarmonyPatches),
+                nameof(FirearmRelevantSkillPostfix)),
+            "firearm skill");
+
+        ApplyPostfix(
+            harmony,
+            AccessTools.Method(
                 typeof(MissionMainAgentController),
                 "ControlTick",
                 System.Type.EmptyTypes),
@@ -26,6 +38,18 @@ internal static class HarmonyPatches
                 nameof(MainAgentInputPostfix)),
             "main-agent input");
 
+    }
+
+    private static void FirearmRelevantSkillPostfix(
+        WeaponClass weaponClass,
+        ref SkillObject __result)
+    {
+        if (__result is null &&
+            (weaponClass == WeaponClass.Pistol ||
+             weaponClass == WeaponClass.Musket))
+        {
+            __result = DefaultSkills.Crossbow;
+        }
     }
 
     private static void ApplyPostfix(
