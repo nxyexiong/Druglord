@@ -108,6 +108,18 @@ Removing the old module first is important: otherwise stale editor resources
 can hide missing files in the package and make a non-reproducible build appear
 to work.
 
+## Outlaw party growth
+
+Every active bandit party grows once per campaign day. Member and prisoner
+growth are calculated independently as
+`max(0, floor(-0.1 * current_size + 5))`.
+
+New members are randomly selected from the party's existing non-hero troop
+types, weighted by each type's current count. New prisoners are peasants
+matching the outlaw culture: looters use Empire peasants, while sea raiders,
+mountain bandits, forest bandits, desert bandits, and steppe bandits use
+Sturgian, Vlandian, Battanian, Aserai, and Khuzait peasants respectively.
+
 ## Firearms
 
 The module currently adds:
@@ -164,6 +176,12 @@ position along Bannerlord's native character aim direction. Mounted shots
 always fire, but horizontal direction is clamped to the same body-rotation
 limits that separate the crosshair from the character's aim.
 
+The campaign troop tree adds **Assault**, equipped with an AKM, cartridges,
+a short sword, and Imperial Veteran Archer armor, and **Sniper**, equipped
+with an AWP, cartridges, a short sword, and Imperial Palatine Guard armor.
+Every culture's male peasant keeps its normal recruit upgrade and also gains
+the **Peasant > Assault > Sniper** firearm branch.
+
 Enable Bannerlord cheat mode to locate the mod items immediately in the
 inventory, or wait for merchandise refreshes to add them to shops.
 
@@ -174,9 +192,12 @@ inventory, or wait for merchandise refreshes to add them to shops.
 - `src\Druglord\DebugFirearmLoadoutMissionLogic.cs`: configurable firearm test loadouts
 - `src\Druglord\RifleControlMissionLogic.cs`: shared rifle controls
 - `src\Druglord\RifleSettings.cs`: per-rifle XML settings loader
+- `src\Druglord\TroopUpgradeRegistry.cs`: peasant firearm upgrade branch
+- `src\Druglord\OutlawPartyGrowthCampaignBehavior.cs`: daily outlaw growth
 - `src\Druglord\FirearmMissionLogic.cs`: firearm shot effects and sound handling
 - `src\Druglord\_Module\ModuleData\druglord_items.xml`: firearm items
 - `src\Druglord\_Module\ModuleData\druglord_rifles.xml`: per-rifle behavior
+- `src\Druglord\_Module\ModuleData\druglord_troops.xml`: firearm troops
 - `src\Druglord\_Module\SubModule.xml`: Bannerlord module manifest
 - `artifacts\Druglord`: generated installable module
 

@@ -1,5 +1,6 @@
 using System;
 using HarmonyLib;
+using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
@@ -55,6 +56,27 @@ public sealed class SubModule : MBSubModuleBase
         DebugBattleLauncher.Tick();
     }
 
+    protected override void OnGameStart(
+        Game game,
+        IGameStarter gameStarter)
+    {
+        base.OnGameStart(game, gameStarter);
+
+        if (game.GameType is not Campaign)
+        {
+            return;
+        }
+
+        if (gameStarter is not CampaignGameStarter campaignGameStarter)
+        {
+            throw new InvalidOperationException(
+                "Campaign game starter is unavailable.");
+        }
+
+        campaignGameStarter.AddBehavior(
+            new OutlawPartyGrowthCampaignBehavior());
+    }
+
     public override void OnBeforeMissionBehaviorInitialize(Mission mission)
     {
         base.OnBeforeMissionBehaviorInitialize(mission);
@@ -75,6 +97,11 @@ public sealed class SubModule : MBSubModuleBase
         base.OnGameInitializationFinished(game);
         FirearmItemRegistry.EnsureLoaded(game);
         RifleSettingsRegistry.EnsureLoaded(game);
+
+        if (game.GameType is Campaign)
+        {
+            TroopUpgradeRegistry.EnsureConfigured(game);
+        }
     }
 
     private static void ShowVersion()
