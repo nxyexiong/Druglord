@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.Library;
@@ -9,11 +11,11 @@ internal sealed class FirearmMissionLogic : MissionLogic
 {
     private const string SmokeParticleName = "psys_dummy_smoke";
     private const string HandgunSoundEvent = "event:/mission/siege/ballista/fire";
-    private const string RifleSoundEvent = "event:/mission/siege/burning_ballista/shot";
 
     private int _smokeParticleId;
     private int _handgunSoundId;
-    private int _rifleSoundId;
+    private readonly Dictionary<string, int> _rifleSoundIds =
+        new Dictionary<string, int>(StringComparer.Ordinal);
 
     public override void OnBehaviorInitialize()
     {
@@ -21,16 +23,16 @@ internal sealed class FirearmMissionLogic : MissionLogic
 
         _smokeParticleId = ParticleSystemManager.GetRuntimeIdByName(SmokeParticleName);
         _handgunSoundId = SoundEvent.GetEventIdFromString(HandgunSoundEvent);
-        _rifleSoundId = SoundEvent.GetEventIdFromString(RifleSoundEvent);
 
         if (_smokeParticleId < 0)
         {
             Debug.Print($"Druglord: particle system '{SmokeParticleName}' was not found.");
         }
 
-        if (_handgunSoundId < 0 || _rifleSoundId < 0)
+        if (_handgunSoundId < 0)
         {
-            Debug.Print("Druglord: one or more placeholder firearm sounds were not found.");
+            Debug.Print(
+                "Druglord: the placeholder handgun sound was not found.");
         }
     }
 
@@ -43,7 +45,11 @@ internal sealed class FirearmMissionLogic : MissionLogic
         bool hasRigidBody,
         int forcedMissileIndex)
     {
-        if (!TryGetFirearmClass(shooterAgent, weaponIndex, out WeaponClass weaponClass))
+        if (!TryGetFirearm(
+                shooterAgent,
+                weaponIndex,
+                out WeaponClass weaponClass,
+                out string itemId))
         {
             return;
         }
@@ -56,10 +62,7 @@ internal sealed class FirearmMissionLogic : MissionLogic
             Mission.Scene.CreateBurstParticle(_smokeParticleId, effectFrame);
         }
 
-        int soundId = weaponClass == WeaponClass.Musket
-            ? _rifleSoundId
-            : _handgunSoundId;
-
+        int soundId = GetSoundId(weaponClass, itemId);
         if (soundId >= 0)
         {
             Mission.MakeSound(
@@ -75,12 +78,55 @@ internal sealed class FirearmMissionLogic : MissionLogic
         Mission.AddSoundAlarmFactorToAgents(shooterAgent, position, alarmLevel);
     }
 
-    private static bool TryGetFirearmClass(
+    private int GetSoundId(WeaponClass weaponClass, string itemId)
+    {
+        if (weaponClass == WeaponClass.Pistol)
+        {
+            return _handgunSoundId;
+        }
+
+        if (_rifleSoundIds.TryGetValue(itemId, out int soundId))
+        {
+            return soundId;
+        }
+
+        if (!RifleSettingsRegistry.TryGet(
+                Game.Current,
+                itemId,
+                out RifleSettings? settings) ||
+            settings is null)
+        {
+            Debug.Print(
+                $"Druglord: rifle '{itemId}' has no configured " +
+                "sound event.");
+            _rifleSoundIds.Add(itemId, -1);
+            return -1;
+        }
+
+        soundId = SoundEvent.GetEventIdFromString(settings.SoundEvent);
+        _rifleSoundIds.Add(itemId, soundId);
+        if (soundId < 0)
+        {
+            Debug.Print(
+                $"Druglord: sound event '{settings.SoundEvent}' for " +
+                $"'{itemId}' was not found.");
+            return -1;
+        }
+
+        Debug.Print(
+            $"Druglord: sound event '{settings.SoundEvent}' loaded for " +
+            $"'{itemId}'.");
+        return soundId;
+    }
+
+    private static bool TryGetFirearm(
         Agent shooterAgent,
         EquipmentIndex weaponIndex,
-        out WeaponClass weaponClass)
+        out WeaponClass weaponClass,
+        out string itemId)
     {
         weaponClass = WeaponClass.Undefined;
+        itemId = string.Empty;
 
         if (shooterAgent is null || weaponIndex == EquipmentIndex.None)
         {
@@ -95,6 +141,13 @@ internal sealed class FirearmMissionLogic : MissionLogic
         }
 
         weaponClass = usage.WeaponClass;
-        return weaponClass == WeaponClass.Pistol || weaponClass == WeaponClass.Musket;
+        if (weaponClass != WeaponClass.Pistol &&
+            weaponClass != WeaponClass.Musket)
+        {
+            return false;
+        }
+
+        itemId = weapon.Item.StringId;
+        return true;
     }
 }

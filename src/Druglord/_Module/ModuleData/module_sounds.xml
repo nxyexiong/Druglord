@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<base xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      type="module_sound">
+  <module_sounds>
+    <module_sound
+      name="druglord/firearms/gunshot1"
+      sound_category="mission_combat"
+      path="gunshot1.wav" />
+    <module_sound
+      name="druglord/firearms/gunshot2"
+      sound_category="mission_combat"
+      path="gunshot2.wav" />
+    <module_sound
+      name="druglord/firearms/gunshot3"
+      sound_category="mission_combat"
+      path="gunshot3.wav" />
+  </module_sounds>
+</base>

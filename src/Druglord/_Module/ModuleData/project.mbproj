@@ -5,4 +5,8 @@
   <outputDirectory>..\MBModule\MBModule\</outputDirectory>
   <XMLDirectory>..\WOTS\Modules\Druglord\</XMLDirectory>
   <ModuleAssemblyDirectory>..\WOTS\bin\</ModuleAssemblyDirectory>
+  <file
+    id="druglord_module_sound"
+    name="ModuleData/module_sounds.xml"
+    type="module_sound" />
 </base>

@@ -30,6 +30,7 @@ internal sealed class RifleSettings
     internal RifleSettings(
         string itemId,
         string ammunitionItemId,
+        string soundEvent,
         bool isDebugLoadout,
         RifleFireMode fireMode,
         short magazineSize,
@@ -50,6 +51,7 @@ internal sealed class RifleSettings
     {
         ItemId = itemId;
         AmmunitionItemId = ammunitionItemId;
+        SoundEvent = soundEvent;
         IsDebugLoadout = isDebugLoadout;
         FireMode = fireMode;
         MagazineSize = magazineSize;
@@ -71,6 +73,7 @@ internal sealed class RifleSettings
 
     internal string ItemId { get; }
     internal string AmmunitionItemId { get; }
+    internal string SoundEvent { get; }
     internal bool IsDebugLoadout { get; }
     internal RifleFireMode FireMode { get; }
     internal short MagazineSize { get; }
@@ -240,6 +243,7 @@ internal static class RifleSettingsRegistry
         RifleSettings settings = new RifleSettings(
             itemId,
             ammunitionItemId,
+            GetRequiredAttribute(node, "sound_event"),
             ParseBoolean(node, "debug_loadout", false),
             fireMode,
             ParseInt16(node, "magazine_size"),

@@ -3,6 +3,7 @@
   <Rifle
     item_id="druglord_akm"
     ammunition_item_id="druglord_cartridge"
+    sound_event="druglord/firearms/gunshot2"
     debug_loadout="true"
     fire_mode="Automatic"
     magazine_size="30"
