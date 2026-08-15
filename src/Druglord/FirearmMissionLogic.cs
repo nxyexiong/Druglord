@@ -10,10 +10,8 @@ namespace Druglord;
 internal sealed class FirearmMissionLogic : MissionLogic
 {
     private const string SmokeParticleName = "psys_dummy_smoke";
-    private const string HandgunSoundEvent = "event:/mission/siege/ballista/fire";
 
     private int _smokeParticleId;
-    private int _handgunSoundId;
     private readonly Dictionary<string, int> _rifleSoundIds =
         new Dictionary<string, int>(StringComparer.Ordinal);
 
@@ -22,17 +20,10 @@ internal sealed class FirearmMissionLogic : MissionLogic
         base.OnBehaviorInitialize();
 
         _smokeParticleId = ParticleSystemManager.GetRuntimeIdByName(SmokeParticleName);
-        _handgunSoundId = SoundEvent.GetEventIdFromString(HandgunSoundEvent);
 
         if (_smokeParticleId < 0)
         {
             Debug.Print($"Druglord: particle system '{SmokeParticleName}' was not found.");
-        }
-
-        if (_handgunSoundId < 0)
-        {
-            Debug.Print(
-                "Druglord: the placeholder handgun sound was not found.");
         }
     }
 
@@ -48,7 +39,6 @@ internal sealed class FirearmMissionLogic : MissionLogic
         if (!TryGetFirearm(
                 shooterAgent,
                 weaponIndex,
-                out WeaponClass weaponClass,
                 out string itemId))
         {
             return;
@@ -62,7 +52,7 @@ internal sealed class FirearmMissionLogic : MissionLogic
             Mission.Scene.CreateBurstParticle(_smokeParticleId, effectFrame);
         }
 
-        int soundId = GetSoundId(weaponClass, itemId);
+        int soundId = GetSoundId(itemId);
         if (soundId >= 0)
         {
             Mission.MakeSound(
@@ -74,17 +64,11 @@ internal sealed class FirearmMissionLogic : MissionLogic
                 -1);
         }
 
-        float alarmLevel = weaponClass == WeaponClass.Musket ? 18f : 14f;
-        Mission.AddSoundAlarmFactorToAgents(shooterAgent, position, alarmLevel);
+        Mission.AddSoundAlarmFactorToAgents(shooterAgent, position, 18f);
     }
 
-    private int GetSoundId(WeaponClass weaponClass, string itemId)
+    private int GetSoundId(string itemId)
     {
-        if (weaponClass == WeaponClass.Pistol)
-        {
-            return _handgunSoundId;
-        }
-
         if (_rifleSoundIds.TryGetValue(itemId, out int soundId))
         {
             return soundId;
@@ -122,10 +106,8 @@ internal sealed class FirearmMissionLogic : MissionLogic
     private static bool TryGetFirearm(
         Agent shooterAgent,
         EquipmentIndex weaponIndex,
-        out WeaponClass weaponClass,
         out string itemId)
     {
-        weaponClass = WeaponClass.Undefined;
         itemId = string.Empty;
 
         if (shooterAgent is null || weaponIndex == EquipmentIndex.None)
@@ -140,14 +122,13 @@ internal sealed class FirearmMissionLogic : MissionLogic
             return false;
         }
 
-        weaponClass = usage.WeaponClass;
-        if (weaponClass != WeaponClass.Pistol &&
-            weaponClass != WeaponClass.Musket)
+        if (usage.WeaponClass != WeaponClass.Musket)
         {
             return false;
         }
 
         itemId = weapon.Item.StringId;
-        return true;
+        return itemId == FirearmItemRegistry.AkmId ||
+               itemId == FirearmItemRegistry.AwpId;
     }
 }

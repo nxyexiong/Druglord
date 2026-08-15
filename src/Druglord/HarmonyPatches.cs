@@ -45,8 +45,7 @@ internal static class HarmonyPatches
         ref SkillObject __result)
     {
         if (__result is null &&
-            (weaponClass == WeaponClass.Pistol ||
-             weaponClass == WeaponClass.Musket))
+            weaponClass == WeaponClass.Musket)
         {
             __result = DefaultSkills.Crossbow;
         }

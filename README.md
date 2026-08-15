@@ -124,15 +124,13 @@ Sturgian, Vlandian, Battanian, Aserai, and Khuzait peasants respectively.
 
 The module currently adds:
 
-- `druglord_prototype_handgun`: `Pistol` weapon class
 - `druglord_akm`: `Musket` weapon class
 - `druglord_awp`: `Musket` weapon class
 - `druglord_cartridge`: shared firearm ammunition
 
-All three weapons temporarily use the light-crossbow animations. The handgun uses
-`crossbow_a`, while the rifles use their imported meshes. Cartridges use the
-vanilla sling-ammo projectile. Gunshots produce a vanilla smoke burst and
-per-rifle custom sounds through `FirearmMissionLogic`.
+Both rifles temporarily use the light-crossbow animations and their imported
+meshes. Cartridges use the vanilla sling-ammo projectile. Gunshots produce a
+vanilla smoke burst and per-rifle custom sounds through `FirearmMissionLogic`.
 
 An import-ready AKM model is included under
 `src\Druglord\_Module\AssetSources\Weapons\AKM`. The original model is by
