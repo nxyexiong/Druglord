@@ -28,6 +28,7 @@ public sealed class SubModule : MBSubModuleBase
                 ShowVersion,
                 () => (false, new TextObject(string.Empty))));
 
+#if DEBUG
         Module.CurrentModule.AddInitialStateOption(
             new InitialStateOption(
                 "Druglord.DebugBattle",
@@ -38,6 +39,7 @@ public sealed class SubModule : MBSubModuleBase
                     ? (true, new TextObject("{=!}The debug battle is loading."))
                     : (false, new TextObject(string.Empty)),
                 new TextObject("{=!}Launch a custom battle where every soldier has an AKM and ammunition.")));
+#endif
     }
 
     protected override void OnSubModuleUnloaded()
@@ -58,6 +60,8 @@ public sealed class SubModule : MBSubModuleBase
         base.OnBeforeMissionBehaviorInitialize(mission);
         mission.AddMissionBehavior(new FirearmMissionLogic());
         mission.AddMissionBehavior(new RifleControlMissionLogic());
+        mission.AddMissionBehavior(
+            new AutomaticRifleAiMissionLogic());
 
         if (DebugBattleLauncher.ConsumeLoadoutRequest())
         {
