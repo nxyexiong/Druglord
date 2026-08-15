@@ -60,7 +60,7 @@
       <Weapon
         weapon_class="Musket"
         ammo_class="Arrow"
-        missile_speed="155"
+        missile_speed="500"
         accuracy="90"
         thrust_damage="98"
         thrust_speed="76"
