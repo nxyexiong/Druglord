@@ -38,7 +38,7 @@ public sealed class SubModule : MBSubModuleBase
                 () => DebugBattleLauncher.IsPending
                     ? (true, new TextObject("{=!}The debug battle is loading."))
                     : (false, new TextObject(string.Empty)),
-                new TextObject("{=!}Launch a custom battle where every soldier has an AKM and ammunition.")));
+                new TextObject("{=!}Launch a custom battle where the player carries the AKM and AWP and every soldier has ammunition.")));
 #endif
     }
 

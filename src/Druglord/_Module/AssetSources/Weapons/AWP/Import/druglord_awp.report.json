@@ -1,0 +1,81 @@
+{
+  "source": "C:\\UserData\\workspace\\Druglord\\src\\Druglord\\_Module\\AssetSources\\Weapons\\AWP\\Original\\Model\\AWP export.obj",
+  "output": "C:\\UserData\\workspace\\Druglord\\src\\Druglord\\_Module\\AssetSources\\Weapons\\AWP\\Import\\druglord_awp.fbx",
+  "base_target_length": 1.27,
+  "target_length": 1.524,
+  "model_scale_multiplier": 1.2,
+  "downward_shift_meters": 0.08,
+  "vertical_offset": [
+    0.0,
+    0.0,
+    -0.07999999821186066
+  ],
+  "source_length": 27.22721290588379,
+  "scale": 0.05597341179458968,
+  "grip_pivot": [
+    0.0,
+    5.199999809265137,
+    -0.10000000149011612
+  ],
+  "bounds": {
+    "minimum": [
+      -0.07365994900465012,
+      -1.1792018413543701,
+      -0.14494618773460388
+    ],
+    "maximum": [
+      0.045785970985889435,
+      0.34479817748069763,
+      0.1422249972820282
+    ],
+    "dimensions": [
+      0.11944591999053955,
+      1.5240000486373901,
+      0.2871711850166321
+    ]
+  },
+  "meshes": [
+    {
+      "name": "druglord_awp",
+      "vertices": 11278,
+      "triangles": 22300,
+      "materials": [
+        "druglord_awp",
+        "druglord_awp_barrel"
+      ]
+    },
+    {
+      "name": "druglord_awp.lod1",
+      "vertices": 6800,
+      "triangles": 13378,
+      "materials": [
+        "druglord_awp",
+        "druglord_awp_barrel"
+      ]
+    },
+    {
+      "name": "druglord_awp.lod2",
+      "vertices": 3670,
+      "triangles": 7135,
+      "materials": [
+        "druglord_awp",
+        "druglord_awp_barrel"
+      ]
+    },
+    {
+      "name": "druglord_awp.lod3",
+      "vertices": 1659,
+      "triangles": 3121,
+      "materials": [
+        "druglord_awp",
+        "druglord_awp_barrel"
+      ]
+    },
+    {
+      "name": "bo_druglord_awp",
+      "vertices": 8,
+      "triangles": 12,
+      "materials": []
+    }
+  ]
+}

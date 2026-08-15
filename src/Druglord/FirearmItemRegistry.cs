@@ -11,6 +11,7 @@ internal static class FirearmItemRegistry
 {
     internal const string HandgunId = "druglord_prototype_handgun";
     internal const string AkmId = "druglord_akm";
+    internal const string AwpId = "druglord_awp";
     internal const string CartridgeId = "druglord_cartridge";
 
     private const string ModuleId = "Druglord";
@@ -19,6 +20,7 @@ internal static class FirearmItemRegistry
     private static Game? _registeredGame;
     private static ItemObject? _handgun;
     private static ItemObject? _akm;
+    private static ItemObject? _awp;
     private static ItemObject? _cartridges;
 
     internal static ItemObject Handgun =>
@@ -26,6 +28,9 @@ internal static class FirearmItemRegistry
 
     internal static ItemObject Akm =>
         _akm ?? throw new InvalidOperationException("Druglord AKM is unavailable.");
+
+    internal static ItemObject Awp =>
+        _awp ?? throw new InvalidOperationException("Druglord AWP is unavailable.");
 
     internal static ItemObject Cartridges =>
         _cartridges ?? throw new InvalidOperationException("Druglord cartridges are unavailable.");
@@ -97,23 +102,28 @@ internal static class FirearmItemRegistry
     {
         ItemObject? handgun = game.ObjectManager.GetObject<ItemObject>(HandgunId);
         ItemObject? akm = game.ObjectManager.GetObject<ItemObject>(AkmId);
+        ItemObject? awp = game.ObjectManager.GetObject<ItemObject>(AwpId);
         ItemObject? cartridges = game.ObjectManager.GetObject<ItemObject>(CartridgeId);
 
         if (handgun is null ||
             akm is null ||
+            awp is null ||
             cartridges is null ||
             !handgun.IsReady ||
             !akm.IsReady ||
+            !awp.IsReady ||
             !cartridges.IsReady)
         {
             _handgun = null;
             _akm = null;
+            _awp = null;
             _cartridges = null;
             return false;
         }
 
         _handgun = handgun;
         _akm = akm;
+        _awp = awp;
         _cartridges = cartridges;
         return true;
     }

@@ -86,15 +86,85 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
     public override void OnDeploymentFinished()
     {
         base.OnDeploymentFinished();
+        EquipMainAgentLoadout();
         InformationManager.DisplayMessage(
             new InformationMessage(
                 $"Druglord equipped {_equippedAgentCount} soldiers with " +
-                $"{_loadouts.Count} debug firearm loadout(s)."));
+                $"{_loadouts.Count} debug firearm loadout(s); the player " +
+                "carries both the AKM and AWP."));
+    }
+
+    private void EquipMainAgentLoadout()
+    {
+        Agent? mainAgent = Mission.MainAgent;
+        if (mainAgent is null || !mainAgent.IsHuman)
+        {
+            throw new InvalidOperationException(
+                "Druglord could not equip the debug battle player.");
+        }
+
+        DebugLoadout akm = GetRequiredLoadout(FirearmItemRegistry.AkmId);
+        DebugLoadout awp = GetRequiredLoadout(FirearmItemRegistry.AwpId);
+
+        EquipFirearm(
+            mainAgent,
+            akm,
+            EquipmentIndex.WeaponItemBeginSlot,
+            EquipmentIndex.Weapon1);
+        EquipFirearm(
+            mainAgent,
+            awp,
+            EquipmentIndex.Weapon2,
+            EquipmentIndex.Weapon3);
+
+        Debug.Print(
+            $"Druglord: equipped AKM and AWP for main agent " +
+            $"{mainAgent.Index}.");
+    }
+
+    private DebugLoadout GetRequiredLoadout(string itemId)
+    {
+        foreach (DebugLoadout loadout in _loadouts)
+        {
+            if (string.Equals(
+                    loadout.Settings.ItemId,
+                    itemId,
+                    StringComparison.Ordinal))
+            {
+                return loadout;
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Debug firearm loadout '{itemId}' is unavailable.");
     }
 
     private static void EquipFirearmLoadout(
         Agent agent,
         DebugLoadout loadout)
+    {
+        EquipFirearm(
+            agent,
+            loadout,
+            EquipmentIndex.WeaponItemBeginSlot,
+            EquipmentIndex.Weapon1);
+
+        for (EquipmentIndex slot = EquipmentIndex.Weapon2;
+             slot <= EquipmentIndex.Weapon3;
+             slot++)
+        {
+            if (!agent.Equipment[slot].IsEmpty)
+            {
+                agent.RemoveEquippedWeapon(slot);
+            }
+        }
+    }
+
+    private static void EquipFirearm(
+        Agent agent,
+        DebugLoadout loadout,
+        EquipmentIndex firearmSlot,
+        EquipmentIndex ammunitionSlot)
     {
         MissionWeapon ammunitionStack =
             new MissionWeapon(loadout.Ammunition, null, null);
@@ -109,23 +179,12 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
 
         EquipWeapon(
             agent,
-            EquipmentIndex.WeaponItemBeginSlot,
+            firearmSlot,
             ref firearm);
         EquipWeapon(
             agent,
-            EquipmentIndex.Weapon1,
+            ammunitionSlot,
             ref ammunitionStack);
-
-        for (EquipmentIndex slot = EquipmentIndex.Weapon2;
-             slot <= EquipmentIndex.Weapon3;
-             slot++)
-        {
-            if (!agent.Equipment[slot].IsEmpty)
-            {
-                agent.RemoveEquippedWeapon(slot);
-            }
-        }
-
     }
 
     private static void EquipWeapon(

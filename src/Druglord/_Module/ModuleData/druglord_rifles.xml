@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Rifles>
   <Rifle
+    item_id="druglord_awp"
+    ammunition_item_id="druglord_cartridge"
+    sound_event="druglord/firearms/gunshot3"
+    debug_loadout="true"
+    fire_mode="Automatic"
+    magazine_size="5"
+    shot_interval="2.0"
+    raise_duration="0.45"
+    recoil_duration="0.35"
+    reload_duration="3.2"
+    peak_recoil_shot_count="2"
+    recoil_reset_delay="2.5"
+    minimum_vertical_kick_degrees="3.0"
+    maximum_vertical_kick_degrees="4.0"
+    maximum_horizontal_kick_degrees="0.05"
+    minimum_spread_degrees="0.01"
+    maximum_spread_degrees="0.05"
+    muzzle_mesh_material="druglord_awp_barrel"
+    muzzle_face="MaxZ"
+    muzzle_offset="0.0,0.0,-1.00" />
+
+  <Rifle
     item_id="druglord_akm"
     ammunition_item_id="druglord_cartridge"
     sound_event="druglord/firearms/gunshot2"

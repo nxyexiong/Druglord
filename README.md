@@ -31,12 +31,13 @@ The module currently adds:
 
 - `druglord_prototype_handgun`: `Pistol` weapon class
 - `druglord_akm`: `Musket` weapon class
+- `druglord_awp`: `Musket` weapon class
 - `druglord_cartridge`: shared firearm ammunition
 
-Both weapons temporarily use the light-crossbow animations. The handgun uses
-`crossbow_a`, while the AKM uses the imported `druglord_akm` mesh. Cartridges
-use the vanilla sling-ammo projectile. Gunshots produce a vanilla smoke burst
-and placeholder siege sounds through `FirearmMissionLogic`.
+All three weapons temporarily use the light-crossbow animations. The handgun uses
+`crossbow_a`, while the rifles use their imported meshes. Cartridges use the
+vanilla sling-ammo projectile. Gunshots produce a vanilla smoke burst and
+per-rifle custom sounds through `FirearmMissionLogic`.
 
 An import-ready AKM model is included under
 `src\Druglord\_Module\AssetSources\Weapons\AKM`. The original model is by
@@ -44,11 +45,18 @@ An import-ready AKM model is included under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See the attribution
 file in that directory for modification details.
 
+The AWP model is by
+[forestie](https://sketchfab.com/forestie), is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and is included
+under `src\Druglord\_Module\AssetSources\Weapons\AWP`. See its attribution
+file for modification details.
+
 The main menu also includes **Druglord Debug Battle**. It launches a small land
-custom battle where every human agent on both sides receives a loaded AKM
-and reserve cartridges, including reinforcements. Passing
-`DruglordDebugBattle` on Bannerlord's command line triggers the same debug flow
-automatically.
+custom battle where every human agent on both sides receives a configured
+debug rifle and reserve cartridges, including reinforcements. The player
+commander receives both a loaded AKM and loaded AWP with reserve cartridges.
+Passing `DruglordDebugBattle` on Bannerlord's command line triggers the same
+debug flow automatically.
 
 The AKM is fully automatic, has a 30-round magazine, and reloads automatically
 only after the magazine reaches zero. Hold the right mouse button to raise the
@@ -56,6 +64,10 @@ AKM and keep it ready without changing the camera FOV. Pressing fire while
 lowered raises the AKM before shooting. Sustained fire kicks the view upward
 and adds random dispersion, reaching maximum recoil on the tenth consecutive
 shot. AKM input is hooked with Harmony.
+
+The AWP is fully automatic at 0.5 rounds per second, has a five-round
+magazine, fires at 900 m/s, and uses a large vertical camera kick with minimal
+horizontal recoil and projectile spread.
 
 Rifle behavior is data-driven through
 `src\Druglord\_Module\ModuleData\druglord_rifles.xml`. Each rifle item has its
