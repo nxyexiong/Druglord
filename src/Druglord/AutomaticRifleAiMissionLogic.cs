@@ -309,6 +309,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         if (!agent.IsActive() ||
             !agent.IsAIControlled ||
             ReferenceEquals(agent, Mission.MainAgent) ||
+            agent.GetPrimaryWieldedItemIndex() != state.RifleSlot ||
             !TryGetRifleInSlot(
                 agent,
                 state.RifleSlot,
@@ -344,14 +345,20 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             if (Mission.CurrentTime >= state.RaiseCompletionTime)
             {
                 EnterReady(agent, state);
-                FireAutomaticShot(agent, state, rifle);
+                if (!FireAutomaticShot(agent, state, rifle))
+                {
+                    return false;
+                }
             }
             break;
 
         case AutomaticRifleState.Ready:
             if (Mission.CurrentTime >= state.NextShotTime)
             {
-                FireAutomaticShot(agent, state, rifle);
+                if (!FireAutomaticShot(agent, state, rifle))
+                {
+                    return false;
+                }
             }
             break;
 
@@ -371,7 +378,10 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                     EnterReady(agent, state);
                     if (Mission.CurrentTime >= state.NextShotTime)
                     {
-                        FireAutomaticShot(agent, state, rifle);
+                        if (!FireAutomaticShot(agent, state, rifle))
+                        {
+                            return false;
+                        }
                     }
                 }
             }
@@ -419,11 +429,19 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             blendOutPeriod: 0.08f);
     }
 
-    private void FireAutomaticShot(
+    private bool FireAutomaticShot(
         Agent agent,
         AutomaticFireState state,
         MissionWeapon rifle)
     {
+        if (agent.GetPrimaryWieldedItemIndex() != state.RifleSlot)
+        {
+            Debug.Print(
+                $"Druglord: canceled queued AI shot for agent " +
+                $"{agent.Index} because the rifle is no longer wielded.");
+            return false;
+        }
+
         RifleSettings settings = state.Settings;
         Vec3 position = GetMuzzlePosition(
             agent,
@@ -507,6 +525,8 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                 $"shot {state.AutomaticShotCount}; magazine " +
                 $"{remainingAmmo}/{settings.MagazineSize}.");
         }
+
+        return true;
     }
 
     private bool BeginReload(
@@ -557,15 +577,17 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         }
 
         MissionWeapon reserve = agent.Equipment[ammunitionSlot];
+        short reserveAmount = reserve.Amount;
         short roundsToLoad = (short)Math.Min(
             settings.MagazineSize,
-            reserve.Amount);
+            reserveAmount);
         if (roundsToLoad <= 0)
         {
             return;
         }
 
         MissionWeapon loadedRounds = reserve.Consume(roundsToLoad);
+        reserve.Amount = reserveAmount;
         rifle.ReloadAmmo(loadedRounds, rifle.ReloadPhaseCount);
         agent.EquipWeaponWithNewEntity(
             state.RifleSlot,
@@ -579,7 +601,8 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             false);
         Debug.Print(
             $"Druglord: AI agent {agent.Index} reloaded " +
-            $"{roundsToLoad} rounds for '{settings.ItemId}'.");
+            $"{roundsToLoad} rounds for '{settings.ItemId}' " +
+            "without consuming reserve ammunition.");
         _outOfAmmoAgents.Remove(agent);
     }
 

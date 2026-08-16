@@ -36,6 +36,7 @@
           NotUsableWithOneHand="true"
           TwoHandIdleOnMount="true"
           CantReloadOnHorseback="true"
+          CanPenetrateShield="true"
           CanBeUsedWhileCrouched="true" />
       </Weapon>
     </ItemComponent>
@@ -78,6 +79,7 @@
           NotUsableWithOneHand="true"
           TwoHandIdleOnMount="true"
           CantReloadOnHorseback="true"
+          CanPenetrateShield="true"
           CanBeUsedWhileCrouched="true" />
       </Weapon>
     </ItemComponent>
@@ -118,6 +120,7 @@
           FirearmAmmo="true"
           AttachAmmoToVisual="true"
           Consumable="true"
+          CanPenetrateShield="true"
           AmmoBreaksOnBounceBack="true" />
       </Weapon>
     </ItemComponent>
