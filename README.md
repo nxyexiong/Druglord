@@ -150,10 +150,10 @@ The PPSh-41 model is by Artem Goyko, is licensed under
 under `src\Druglord\_Module\AssetSources\Weapons\PPSh41`. See its attribution
 file in that directory for modification details.
 
-The main menu also includes **Druglord Debug Battle**. It launches a small land
-custom battle where every human agent on both sides receives a configured
-debug rifle and reserve cartridges, including reinforcements. The player
-commander receives the loaded AKM, AWP, and PPSh-41 with reserve cartridges.
+The main menu also includes **Druglord Debug Battle**. Both forces have
+10 Recruits, 10 Assault troops, and 10 Snipers. A loaded copy of every
+configured firearm and a matching ammunition stack are dropped near the
+player commander.
 Passing `DruglordDebugBattle` on Bannerlord's command line triggers the same
 debug flow automatically.
 
@@ -184,12 +184,13 @@ position along Bannerlord's native character aim direction. Mounted shots
 always fire, but horizontal direction is clamped to the same body-rotation
 limits that separate the crosshair from the character's aim.
 
-The campaign troop tree adds **Assault**, equipped with either an AKM or
-PPSh-41, cartridges, a short sword, and Imperial Veteran Archer armor, and
-**Sniper**, equipped with an AWP, cartridges, a short sword, and Imperial
-Palatine Guard armor.
+The campaign troop tree adds **Recruit**, equipped with a PPSh-41,
+cartridges, a short sword, and Imperial Trained Archer armor; **Assault**,
+equipped with an AKM, cartridges, a short sword, and Imperial Veteran Archer
+armor; and **Sniper**, equipped with an AWP, cartridges, a short sword, and
+Imperial Palatine Guard armor.
 Every culture's male peasant keeps its normal recruit upgrade and also gains
-the **Peasant > Assault > Sniper** firearm branch.
+the **Peasant > Recruit > Assault > Sniper** firearm branch.
 
 Enable Bannerlord cheat mode to locate the mod items immediately in the
 inventory, or wait for merchandise refreshes to add them to shops.

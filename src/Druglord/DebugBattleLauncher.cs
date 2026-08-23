@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.Library;
@@ -10,8 +11,14 @@ namespace Druglord;
 
 internal static class DebugBattleLauncher
 {
-    private const int InfantryCount = 7;
-    private const int RangedCount = 4;
+    private const int TroopsPerDruglordType = 10;
+
+    private static readonly string[] DruglordTroopIds =
+    {
+        TroopUpgradeRegistry.RecruitId,
+        TroopUpgradeRegistry.AssaultId,
+        TroopUpgradeRegistry.SniperId
+    };
 
     private static bool _battleStartPending;
     private static bool _loadoutPending;
@@ -103,8 +110,43 @@ internal static class DebugBattleLauncher
             return false;
         }
 
-        int[] playerTroops = { InfantryCount, RangedCount, 0, 0 };
-        int[] enemyTroops = { InfantryCount, RangedCount, 0, 0 };
+        List<BasicCharacterObject> druglordTroops =
+            new List<BasicCharacterObject>(DruglordTroopIds.Length);
+
+        foreach (string troopId in DruglordTroopIds)
+        {
+            BasicCharacterObject? troop =
+                Game.Current.ObjectManager.GetObject<BasicCharacterObject>(
+                    troopId);
+            if (troop is null)
+            {
+                error = $"Druglord troop '{troopId}' could not be loaded.";
+                return false;
+            }
+
+            druglordTroops.Add(troop);
+        }
+
+        int druglordTroopCount =
+            TroopsPerDruglordType * druglordTroops.Count;
+        int[] playerTroops =
+        {
+            0,
+            druglordTroopCount,
+            0,
+            0
+        };
+        int[] enemyTroops =
+        {
+            0,
+            druglordTroopCount,
+            0,
+            0
+        };
+        List<BasicCharacterObject>[] playerTroopSelections =
+            CreateTroopSelections(druglordTroops);
+        List<BasicCharacterObject>[] enemyTroopSelections =
+            CreateTroopSelections(druglordTroops);
 
         CustomBattleCombatant[] parties = CustomBattleHelper.GetCustomBattleParties(
             playerCharacter,
@@ -112,10 +154,10 @@ internal static class DebugBattleLauncher
             enemyCharacter,
             playerCulture,
             playerTroops,
-            null,
+            playerTroopSelections,
             enemyCulture,
             enemyTroops,
-            null,
+            enemyTroopSelections,
             true);
 
         battleData = CustomBattleHelper.PrepareBattleData(
@@ -138,6 +180,18 @@ internal static class DebugBattleLauncher
 
         error = string.Empty;
         return true;
+    }
+
+    private static List<BasicCharacterObject>[] CreateTroopSelections(
+        List<BasicCharacterObject> druglordTroops)
+    {
+        return new[]
+        {
+            new List<BasicCharacterObject>(),
+            new List<BasicCharacterObject>(druglordTroops),
+            new List<BasicCharacterObject>(),
+            new List<BasicCharacterObject>()
+        };
     }
 
     private static void ShowError(string error)

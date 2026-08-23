@@ -1,6 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <NPCCharacters>
   <NPCCharacter
+    id="druglord_recruit"
+    default_group="Ranged"
+    level="16"
+    name="{=!}Recruit"
+    occupation="Soldier"
+    culture="Culture.empire">
+    <face>
+      <face_key_template
+        value="BodyProperty.fighter_empire" />
+    </face>
+    <skills>
+      <skill
+        id="Athletics"
+        value="70" />
+      <skill
+        id="Riding"
+        value="10" />
+      <skill
+        id="OneHanded"
+        value="70" />
+      <skill
+        id="TwoHanded"
+        value="40" />
+      <skill
+        id="Polearm"
+        value="30" />
+      <skill
+        id="Bow"
+        value="30" />
+      <skill
+        id="Crossbow"
+        value="70" />
+      <skill
+        id="Throwing"
+        value="40" />
+    </skills>
+    <upgrade_targets>
+      <upgrade_target
+        id="NPCCharacter.druglord_assault" />
+    </upgrade_targets>
+    <Equipments>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_ppsh41" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.short_sword_t3" />
+        <equipment
+          slot="Body"
+          id="Item.imperial_padded_cloth" />
+        <equipment
+          slot="Gloves"
+          id="Item.guarded_padded_vambrace" />
+        <equipment
+          slot="Leg"
+          id="Item.leather_shoes" />
+        <equipment
+          slot="Head"
+          id="Item.laced_coif" />
+      </EquipmentRoster>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_ppsh41" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.short_sword_t3" />
+        <equipment
+          slot="Body"
+          id="Item.tunic_with_rolled_cloth" />
+        <equipment
+          slot="Gloves"
+          id="Item.padded_vambrace" />
+        <equipment
+          slot="Leg"
+          id="Item.wrapped_shoes" />
+        <equipment
+          slot="Head"
+          id="Item.laced_coif" />
+      </EquipmentRoster>
+      <EquipmentSet
+        id="empire_troop_civilian_template_t2"
+        equipmentType="Civilian" />
+    </Equipments>
+  </NPCCharacter>
+
+  <NPCCharacter
     id="druglord_assault"
     default_group="Ranged"
     level="21"

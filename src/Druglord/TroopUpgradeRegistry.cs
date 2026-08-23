@@ -9,6 +9,7 @@ namespace Druglord;
 
 internal static class TroopUpgradeRegistry
 {
+    internal const string RecruitId = "druglord_recruit";
     internal const string AssaultId = "druglord_assault";
     internal const string SniperId = "druglord_sniper";
 
@@ -31,6 +32,10 @@ internal static class TroopUpgradeRegistry
             return;
         }
 
+        CharacterObject recruit =
+            game.ObjectManager.GetObject<CharacterObject>(RecruitId) ??
+            throw new InvalidOperationException(
+                "Druglord Recruit troop is unavailable.");
         CharacterObject assault =
             game.ObjectManager.GetObject<CharacterObject>(AssaultId) ??
             throw new InvalidOperationException(
@@ -39,6 +44,12 @@ internal static class TroopUpgradeRegistry
             game.ObjectManager.GetObject<CharacterObject>(SniperId) ??
             throw new InvalidOperationException(
                 "Druglord Sniper troop is unavailable.");
+
+        if (!ContainsUpgradeTarget(recruit, assault))
+        {
+            throw new InvalidOperationException(
+                "Druglord Recruit must upgrade to Druglord Assault.");
+        }
 
         if (!ContainsUpgradeTarget(assault, sniper))
         {
@@ -61,7 +72,7 @@ internal static class TroopUpgradeRegistry
                 throw new InvalidOperationException(
                     $"Bannerlord peasant troop '{peasantId}' is unavailable.");
 
-            if (ContainsUpgradeTarget(peasant, assault))
+            if (ContainsUpgradeTarget(peasant, recruit))
             {
                 continue;
             }
@@ -75,7 +86,7 @@ internal static class TroopUpgradeRegistry
                 existingTargets,
                 updatedTargets,
                 existingTargets.Length);
-            updatedTargets[updatedTargets.Length - 1] = assault;
+            updatedTargets[updatedTargets.Length - 1] = recruit;
 
             setUpgradeTargets.Invoke(
                 peasant,
@@ -84,7 +95,7 @@ internal static class TroopUpgradeRegistry
 
         _configuredGame = game;
         Debug.Print(
-            "Druglord: added Assault as an upgrade for all peasant cultures.");
+            "Druglord: added Recruit as an upgrade for all peasant cultures.");
     }
 
     private static bool ContainsUpgradeTarget(
