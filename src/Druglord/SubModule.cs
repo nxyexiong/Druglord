@@ -13,6 +13,7 @@ public sealed class SubModule : MBSubModuleBase
     private const string HarmonyId = "com.nxyexiong.druglord";
 
     private Harmony? _harmony;
+    private bool _postInitializationPatchesApplied;
 
     protected override void OnSubModuleLoad()
     {
@@ -55,6 +56,7 @@ public sealed class SubModule : MBSubModuleBase
     {
         _harmony?.UnpatchAll(HarmonyId);
         _harmony = null;
+        _postInitializationPatchesApplied = false;
         base.OnSubModuleUnloaded();
     }
 
@@ -103,6 +105,16 @@ public sealed class SubModule : MBSubModuleBase
     public override void OnGameInitializationFinished(Game game)
     {
         base.OnGameInitializationFinished(game);
+
+        // Patching MissileHitCallback before game data loads freezes
+        // Bannerlord's cached voice-type indices at -1.
+        if (_harmony is not null &&
+            !_postInitializationPatchesApplied)
+        {
+            _postInitializationPatchesApplied =
+                HarmonyPatches.ApplyAfterGameInitialization(_harmony);
+        }
+
         FirearmItemRegistry.EnsureLoaded(game);
         RifleSettingsRegistry.EnsureLoaded(game);
 

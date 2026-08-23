@@ -41,8 +41,11 @@ internal static class HarmonyPatches
                 typeof(HarmonyPatches),
                 nameof(MainAgentInputPostfix)),
             "main-agent input");
+    }
 
-        ApplyTranspiler(
+    internal static bool ApplyAfterGameInitialization(Harmony harmony)
+    {
+        return ApplyTranspiler(
             harmony,
             AccessTools.Method(
                 typeof(Mission),
@@ -88,7 +91,7 @@ internal static class HarmonyPatches
         }
     }
 
-    private static void ApplyTranspiler(
+    private static bool ApplyTranspiler(
         Harmony harmony,
         MethodInfo? original,
         MethodInfo? transpiler,
@@ -97,7 +100,7 @@ internal static class HarmonyPatches
         if (original is null || transpiler is null)
         {
             Debug.Print($"Druglord: Harmony target for {patchName} was not found.");
-            return;
+            return false;
         }
 
         try
@@ -106,11 +109,13 @@ internal static class HarmonyPatches
                 original,
                 transpiler: new HarmonyMethod(transpiler));
             Debug.Print($"Druglord: Harmony {patchName} patch applied.");
+            return true;
         }
         catch (System.Exception exception)
         {
             Debug.Print(
                 $"Druglord: Harmony {patchName} patch failed: {exception}");
+            return false;
         }
     }
 
