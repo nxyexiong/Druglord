@@ -12,6 +12,8 @@ internal static class TroopUpgradeRegistry
     internal const string RecruitId = "druglord_recruit";
     internal const string AssaultId = "druglord_assault";
     internal const string SniperId = "druglord_sniper";
+    internal const string BreacherId = "druglord_breacher";
+    internal const string GrenadierId = "druglord_grenadier";
 
     private static readonly string[] PeasantIds =
     {
@@ -44,6 +46,14 @@ internal static class TroopUpgradeRegistry
             game.ObjectManager.GetObject<CharacterObject>(SniperId) ??
             throw new InvalidOperationException(
                 "Druglord Sniper troop is unavailable.");
+        CharacterObject breacher =
+            game.ObjectManager.GetObject<CharacterObject>(BreacherId) ??
+            throw new InvalidOperationException(
+                "Druglord Breacher troop is unavailable.");
+        CharacterObject grenadier =
+            game.ObjectManager.GetObject<CharacterObject>(GrenadierId) ??
+            throw new InvalidOperationException(
+                "Druglord Grenadier troop is unavailable.");
 
         if (!ContainsUpgradeTarget(recruit, assault))
         {
@@ -55,6 +65,18 @@ internal static class TroopUpgradeRegistry
         {
             throw new InvalidOperationException(
                 "Druglord Assault must upgrade to Druglord Sniper.");
+        }
+
+        if (!ContainsUpgradeTarget(recruit, breacher))
+        {
+            throw new InvalidOperationException(
+                "Druglord Recruit must upgrade to Druglord Breacher.");
+        }
+
+        if (!ContainsUpgradeTarget(breacher, grenadier))
+        {
+            throw new InvalidOperationException(
+                "Druglord Breacher must upgrade to Druglord Grenadier.");
         }
 
         MethodInfo setUpgradeTargets =

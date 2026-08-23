@@ -29,8 +29,8 @@ internal sealed class FirearmMissionLogic : MissionLogic
     private const string ExplosionSoundEvent =
         "event:/mission/siege/generic/stone_destroy";
     private const float ExplosionRadius = 10f;
-    private const float ExplosionCenterDamage = 180f;
-    private const float ExplosionEdgeDamage = 20f;
+    private const float ExplosionCenterDamage = 300f;
+    private const float ExplosionEdgeDamage = 50f;
 
     private int _smokeParticleId;
     private int _explosionFireParticleId;

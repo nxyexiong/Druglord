@@ -17,7 +17,9 @@ internal static class DebugBattleLauncher
     {
         TroopUpgradeRegistry.RecruitId,
         TroopUpgradeRegistry.AssaultId,
-        TroopUpgradeRegistry.SniperId
+        TroopUpgradeRegistry.SniperId,
+        TroopUpgradeRegistry.BreacherId,
+        TroopUpgradeRegistry.GrenadierId
     };
 
     private static bool _battleStartPending;

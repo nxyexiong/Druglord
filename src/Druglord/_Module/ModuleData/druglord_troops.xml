@@ -3,8 +3,78 @@
   <NPCCharacter
     id="druglord_recruit"
     default_group="Ranged"
-    level="16"
+    level="11"
     name="{=!}Recruit"
+    occupation="Soldier"
+    culture="Culture.empire">
+    <face>
+      <face_key_template
+        value="BodyProperty.fighter_empire" />
+    </face>
+    <skills>
+      <skill
+        id="Athletics"
+        value="40" />
+      <skill
+        id="Riding"
+        value="5" />
+      <skill
+        id="OneHanded"
+        value="40" />
+      <skill
+        id="TwoHanded"
+        value="15" />
+      <skill
+        id="Polearm"
+        value="20" />
+      <skill
+        id="Bow"
+        value="20" />
+      <skill
+        id="Crossbow"
+        value="40" />
+      <skill
+        id="Throwing"
+        value="15" />
+    </skills>
+    <upgrade_targets>
+      <upgrade_target
+        id="NPCCharacter.druglord_assault" />
+      <upgrade_target
+        id="NPCCharacter.druglord_breacher" />
+    </upgrade_targets>
+    <Equipments>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_ppsh41" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.empire_mace_1_t2" />
+        <equipment
+          slot="Head"
+          id="Item.laced_cloth_coif" />
+        <equipment
+          slot="Body"
+          id="Item.leather_tunic" />
+        <equipment
+          slot="Leg"
+          id="Item.strapped_leather_boots" />
+      </EquipmentRoster>
+      <EquipmentSet
+        id="empire_troop_civilian_template_t1"
+        equipmentType="Civilian" />
+    </Equipments>
+  </NPCCharacter>
+
+  <NPCCharacter
+    id="druglord_assault"
+    default_group="Ranged"
+    level="16"
+    name="{=!}Assault"
     occupation="Soldier"
     culture="Culture.empire">
     <face>
@@ -39,19 +109,19 @@
     </skills>
     <upgrade_targets>
       <upgrade_target
-        id="NPCCharacter.druglord_assault" />
+        id="NPCCharacter.druglord_sniper" />
     </upgrade_targets>
     <Equipments>
       <EquipmentRoster>
         <equipment
           slot="Item0"
-          id="Item.druglord_ppsh41" />
+          id="Item.druglord_akm" />
         <equipment
           slot="Item1"
           id="Item.druglord_cartridge" />
         <equipment
           slot="Item2"
-          id="Item.short_sword_t3" />
+          id="Item.empire_sword_1_t2" />
         <equipment
           slot="Body"
           id="Item.imperial_padded_cloth" />
@@ -68,13 +138,13 @@
       <EquipmentRoster>
         <equipment
           slot="Item0"
-          id="Item.druglord_ppsh41" />
+          id="Item.druglord_akm" />
         <equipment
           slot="Item1"
           id="Item.druglord_cartridge" />
         <equipment
           slot="Item2"
-          id="Item.short_sword_t3" />
+          id="Item.empire_sword_1_t2" />
         <equipment
           slot="Body"
           id="Item.tunic_with_rolled_cloth" />
@@ -95,10 +165,10 @@
   </NPCCharacter>
 
   <NPCCharacter
-    id="druglord_assault"
+    id="druglord_sniper"
     default_group="Ranged"
     level="21"
-    name="{=!}Assault"
+    name="{=!}Sniper"
     occupation="Soldier"
     culture="Culture.empire">
     <face>
@@ -131,21 +201,18 @@
         id="Throwing"
         value="45" />
     </skills>
-    <upgrade_targets>
-      <upgrade_target
-        id="NPCCharacter.druglord_sniper" />
-    </upgrade_targets>
+    <upgrade_targets></upgrade_targets>
     <Equipments>
       <EquipmentRoster>
         <equipment
           slot="Item0"
-          id="Item.druglord_akm" />
+          id="Item.druglord_awp" />
         <equipment
           slot="Item1"
           id="Item.druglord_cartridge" />
         <equipment
           slot="Item2"
-          id="Item.short_sword_t3" />
+          id="Item.empire_sword_3_t3" />
         <equipment
           slot="Body"
           id="Item.eastern_studded_leather" />
@@ -159,51 +226,6 @@
           slot="Gloves"
           id="Item.reinforced_padded_mitten" />
       </EquipmentRoster>
-      <EquipmentSet
-        id="empire_troop_civilian_template_t2"
-        equipmentType="Civilian" />
-    </Equipments>
-  </NPCCharacter>
-
-  <NPCCharacter
-    id="druglord_sniper"
-    default_group="Ranged"
-    level="26"
-    name="{=!}Sniper"
-    occupation="Soldier"
-    culture="Culture.empire">
-    <face>
-      <face_key_template
-        value="BodyProperty.fighter_empire_tall" />
-    </face>
-    <skills>
-      <skill
-        id="Athletics"
-        value="130" />
-      <skill
-        id="Riding"
-        value="40" />
-      <skill
-        id="OneHanded"
-        value="130" />
-      <skill
-        id="TwoHanded"
-        value="30" />
-      <skill
-        id="Polearm"
-        value="80" />
-      <skill
-        id="Bow"
-        value="80" />
-      <skill
-        id="Crossbow"
-        value="140" />
-      <skill
-        id="Throwing"
-        value="60" />
-    </skills>
-    <upgrade_targets></upgrade_targets>
-    <Equipments>
       <EquipmentRoster>
         <equipment
           slot="Item0"
@@ -213,22 +235,253 @@
           id="Item.druglord_cartridge" />
         <equipment
           slot="Item2"
-          id="Item.short_sword_t3" />
+          id="Item.empire_sword_3_t3" />
         <equipment
           slot="Body"
-          id="Item.legionary_mail" />
+          id="Item.eastern_studded_leather" />
         <equipment
           slot="Leg"
           id="Item.leather_cavalier_boots" />
         <equipment
           slot="Head"
-          id="Item.roundkettle_over_imperial_mail" />
+          id="Item.roundkettle_over_imperial_leather" />
+        <equipment
+          slot="Gloves"
+          id="Item.reinforced_padded_mitten" />
+      </EquipmentRoster>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_awp" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.empire_sword_3_t3" />
+        <equipment
+          slot="Body"
+          id="Item.eastern_studded_leather" />
+        <equipment
+          slot="Leg"
+          id="Item.leather_cavalier_boots" />
+        <equipment
+          slot="Head"
+          id="Item.ironlame_roundkettle_over_imperial_leather" />
         <equipment
           slot="Gloves"
           id="Item.reinforced_padded_mitten" />
       </EquipmentRoster>
       <EquipmentSet
-        id="empire_troop_civilian_template_t3"
+        id="empire_troop_civilian_template_t2"
+        equipmentType="Civilian" />
+    </Equipments>
+  </NPCCharacter>
+
+  <NPCCharacter
+    id="druglord_breacher"
+    default_group="Ranged"
+    level="16"
+    name="{=!}Breacher"
+    occupation="Soldier"
+    culture="Culture.empire">
+    <face>
+      <face_key_template
+        value="BodyProperty.fighter_empire" />
+    </face>
+    <skills>
+      <skill
+        id="Athletics"
+        value="70" />
+      <skill
+        id="Riding"
+        value="10" />
+      <skill
+        id="OneHanded"
+        value="70" />
+      <skill
+        id="TwoHanded"
+        value="40" />
+      <skill
+        id="Polearm"
+        value="30" />
+      <skill
+        id="Bow"
+        value="30" />
+      <skill
+        id="Crossbow"
+        value="70" />
+      <skill
+        id="Throwing"
+        value="40" />
+    </skills>
+    <upgrade_targets>
+      <upgrade_target
+        id="NPCCharacter.druglord_grenadier" />
+    </upgrade_targets>
+    <Equipments>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_m870" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.empire_sword_1_t2" />
+        <equipment
+          slot="Body"
+          id="Item.imperial_padded_cloth" />
+        <equipment
+          slot="Gloves"
+          id="Item.guarded_padded_vambrace" />
+        <equipment
+          slot="Leg"
+          id="Item.leather_shoes" />
+        <equipment
+          slot="Head"
+          id="Item.laced_coif" />
+      </EquipmentRoster>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_m870" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.empire_sword_1_t2" />
+        <equipment
+          slot="Body"
+          id="Item.tunic_with_rolled_cloth" />
+        <equipment
+          slot="Gloves"
+          id="Item.padded_vambrace" />
+        <equipment
+          slot="Leg"
+          id="Item.wrapped_shoes" />
+        <equipment
+          slot="Head"
+          id="Item.laced_coif" />
+      </EquipmentRoster>
+      <EquipmentSet
+        id="empire_troop_civilian_template_t2"
+        equipmentType="Civilian" />
+    </Equipments>
+  </NPCCharacter>
+
+  <NPCCharacter
+    id="druglord_grenadier"
+    default_group="Ranged"
+    level="21"
+    name="{=!}Grenadier"
+    occupation="Soldier"
+    culture="Culture.empire">
+    <face>
+      <face_key_template
+        value="BodyProperty.fighter_empire_veteran" />
+    </face>
+    <skills>
+      <skill
+        id="Athletics"
+        value="100" />
+      <skill
+        id="Riding"
+        value="15" />
+      <skill
+        id="OneHanded"
+        value="100" />
+      <skill
+        id="TwoHanded"
+        value="60" />
+      <skill
+        id="Polearm"
+        value="60" />
+      <skill
+        id="Bow"
+        value="45" />
+      <skill
+        id="Crossbow"
+        value="100" />
+      <skill
+        id="Throwing"
+        value="45" />
+    </skills>
+    <upgrade_targets></upgrade_targets>
+    <Equipments>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_m79" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.empire_sword_3_t3" />
+        <equipment
+          slot="Body"
+          id="Item.eastern_studded_leather" />
+        <equipment
+          slot="Leg"
+          id="Item.leather_cavalier_boots" />
+        <equipment
+          slot="Head"
+          id="Item.leatherlame_roundkettle_over_imperial_leather" />
+        <equipment
+          slot="Gloves"
+          id="Item.reinforced_padded_mitten" />
+      </EquipmentRoster>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_m79" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.empire_sword_3_t3" />
+        <equipment
+          slot="Body"
+          id="Item.eastern_studded_leather" />
+        <equipment
+          slot="Leg"
+          id="Item.leather_cavalier_boots" />
+        <equipment
+          slot="Head"
+          id="Item.roundkettle_over_imperial_leather" />
+        <equipment
+          slot="Gloves"
+          id="Item.reinforced_padded_mitten" />
+      </EquipmentRoster>
+      <EquipmentRoster>
+        <equipment
+          slot="Item0"
+          id="Item.druglord_m79" />
+        <equipment
+          slot="Item1"
+          id="Item.druglord_cartridge" />
+        <equipment
+          slot="Item2"
+          id="Item.empire_sword_3_t3" />
+        <equipment
+          slot="Body"
+          id="Item.eastern_studded_leather" />
+        <equipment
+          slot="Leg"
+          id="Item.leather_cavalier_boots" />
+        <equipment
+          slot="Head"
+          id="Item.ironlame_roundkettle_over_imperial_leather" />
+        <equipment
+          slot="Gloves"
+          id="Item.reinforced_padded_mitten" />
+      </EquipmentRoster>
+      <EquipmentSet
+        id="empire_troop_civilian_template_t2"
         equipmentType="Civilian" />
     </Equipments>
   </NPCCharacter>

@@ -163,9 +163,9 @@ under `src\Druglord\_Module\AssetSources\Weapons\M79`. See its attribution
 file in that directory for modification details.
 
 The main menu also includes **Druglord Debug Battle**. Both forces have
-10 Recruits, 10 Assault troops, and 10 Snipers. A loaded copy of every
-configured firearm and a matching ammunition stack are dropped near the
-player commander.
+10 each of Recruits, Assault troops, Snipers, Breachers, and Grenadiers.
+A loaded copy of every configured firearm and a matching ammunition stack
+are dropped near the player commander.
 Passing `DruglordDebugBattle` on Bannerlord's command line triggers the same
 debug flow automatically.
 
