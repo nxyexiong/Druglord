@@ -3,6 +3,7 @@ using System.IO;
 using System.Xml;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
+using TaleWorlds.MountAndBlade;
 using TaleWorlds.ModuleManager;
 
 namespace Druglord;
@@ -91,6 +92,18 @@ internal static class FirearmItemRegistry
         }
 
         LogReadyForNewGame(game);
+    }
+
+    internal static bool IsBullet(MissionWeapon weapon)
+    {
+        if (weapon.IsEmpty ||
+            weapon.Item.StringId != CartridgeId ||
+            weapon.CurrentUsageItem is not { } usage)
+        {
+            return false;
+        }
+
+        return usage.WeaponFlags.HasAnyFlag(WeaponFlags.FirearmAmmo);
     }
 
     private static bool TryResolveItems(Game game)

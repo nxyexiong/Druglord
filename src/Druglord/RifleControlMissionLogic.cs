@@ -424,9 +424,9 @@ internal sealed class RifleControlMissionLogic : MissionLogic
                 InformationManager.DisplayMessage(
                     new InformationMessage(
                         $"{_activeRifleName}: out of ammunition."));
+                LowerRifle(agent);
             }
 
-            LowerRifle(agent);
             return;
         }
 
@@ -471,25 +471,19 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         short roundsToLoad = (short)Math.Min(
             settings.MagazineSize,
             reserve.Amount);
-        MissionWeapon loadedRounds = reserve.Consume(roundsToLoad);
+        short remainingReserve =
+            (short)(reserve.Amount - roundsToLoad);
 
-        MissionWeapon rifle = agent.Equipment[rifleSlot];
-        rifle.ReloadAmmo(
-            loadedRounds,
-            rifle.ReloadPhaseCount);
-
-        agent.EquipWeaponWithNewEntity(rifleSlot, ref rifle);
-        agent.EquipWeaponWithNewEntity(
-            ammunitionSlot,
-            ref reserve);
-        agent.TryToWieldWeaponInSlot(
+        agent.SetReloadAmmoInSlot(
             rifleSlot,
-            Agent.WeaponWieldActionType.InstantAfterPickUp,
+            ammunitionSlot,
+            roundsToLoad);
+        agent.SetWeaponAmountInSlot(
+            ammunitionSlot,
+            remainingReserve,
             false);
 
         _weaponState = WeaponState.Lowered;
-        _nextShotTime =
-            Mission.CurrentTime + settings.ShotInterval;
         _outOfAmmoNotified = false;
 
         InformationManager.DisplayMessage(
@@ -537,6 +531,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         _aimHeld = false;
         _triggerHeld = false;
         _shotQueued = false;
+        _outOfAmmoNotified = false;
         _wasRifleWielded = false;
         _activeSettings = null;
         _activeRifleName = "Rifle";
