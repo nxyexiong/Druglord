@@ -124,15 +124,16 @@ Sturgian, Vlandian, Battanian, Aserai, and Khuzait peasants respectively.
 
 The module currently adds:
 
-- `druglord_akm`: `Musket` weapon class
-- `druglord_awp`: `Musket` weapon class
-- `druglord_ppsh41`: `Musket` weapon class
-- `druglord_m870`: `Musket` weapon class with 9-projectile buckshot
-- `druglord_m79`: single-shot `Musket` grenade launcher with radial explosions
+- `druglord_akm`: automatic rifle
+- `druglord_awp`: trigger-per-shot sniper rifle
+- `druglord_ppsh41`: automatic submachine gun
+- `druglord_m870`: trigger-per-shot shotgun with 9-projectile buckshot
+- `druglord_m79`: single-shot grenade launcher with radial explosions
 - `druglord_cartridge`: shared firearm ammunition
 
-The firearms temporarily use the light-crossbow animations and their imported
-meshes. Cartridges use the vanilla sling-ammo projectile. Gunshots produce a
+The firearms use Bannerlord's supported crossbow AI and animation class while
+Druglord controls their magazines, fire modes, projectiles, recoil, and
+reloads. Cartridges use the vanilla sling-ammo projectile. Gunshots produce a
 vanilla smoke burst and per-rifle custom sounds through `FirearmMissionLogic`.
 
 An import-ready AKM model is included under

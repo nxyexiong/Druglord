@@ -339,10 +339,10 @@ internal static class RifleSettingsRegistry
             game.ObjectManager.GetObject<ItemObject>(settings.ItemId);
         if (rifle is null ||
             !rifle.IsReady ||
-            rifle.PrimaryWeapon?.WeaponClass != WeaponClass.Musket)
+            rifle.PrimaryWeapon?.WeaponClass != WeaponClass.Crossbow)
         {
             throw new InvalidDataException(
-                $"Configured rifle '{settings.ItemId}' is not a ready Musket item.");
+                $"Configured rifle '{settings.ItemId}' is not a ready Crossbow-backed item.");
         }
 
         ItemObject? ammunition =

@@ -571,7 +571,7 @@ internal sealed class FirearmMissionLogic : MissionLogic
             return false;
         }
 
-        if (usage.WeaponClass != WeaponClass.Musket)
+        if (usage.WeaponClass != WeaponClass.Crossbow)
         {
             return false;
         }

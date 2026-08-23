@@ -14,16 +14,16 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     {
         internal AiInputSignal(
             Agent agent,
-            bool hasAutomaticRifle,
+            bool hasConfiguredRifle,
             bool attackRequested)
         {
             Agent = agent;
-            HasAutomaticRifle = hasAutomaticRifle;
+            HasConfiguredRifle = hasConfiguredRifle;
             AttackRequested = attackRequested;
         }
 
         internal Agent Agent { get; }
-        internal bool HasAutomaticRifle { get; }
+        internal bool HasConfiguredRifle { get; }
         internal bool AttackRequested { get; }
     }
 
@@ -99,6 +99,8 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             new List<KeyValuePair<Agent, AutomaticFireState>>();
     private readonly HashSet<Agent> _outOfAmmoAgents =
         new HashSet<Agent>();
+    private readonly Dictionary<Agent, float> _nextShotTimes =
+        new Dictionary<Agent, float>();
     private readonly List<Agent> _removalBuffer =
         new List<Agent>();
 
@@ -117,7 +119,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         _reloadAction =
             ActionIndexCache.Create("act_reload_crossbow_light");
 
-        Debug.Print("Druglord: automatic-rifle AI controller initialized.");
+        Debug.Print("Druglord: rifle AI controller initialized.");
     }
 
     public override void OnMissionTick(float dt)
@@ -169,6 +171,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     {
         RemoveState(affectedAgent);
         _outOfAmmoAgents.Remove(affectedAgent);
+        _nextShotTimes.Remove(affectedAgent);
         base.OnAgentRemoved(
             affectedAgent,
             affectorAgent,
@@ -180,6 +183,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     {
         RemoveState(affectedAgent);
         _outOfAmmoAgents.Remove(affectedAgent);
+        _nextShotTimes.Remove(affectedAgent);
         base.OnAgentDeleted(affectedAgent);
     }
 
@@ -187,6 +191,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     {
         _states.Clear();
         _outOfAmmoAgents.Clear();
+        _nextShotTimes.Clear();
         while (_inputSignals.TryDequeue(out _))
         {
         }
@@ -198,11 +203,11 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         Agent agent,
         Agent.MovementControlFlag movementFlag)
     {
-        bool hasAutomaticRifle =
+        bool hasConfiguredRifle =
             agent.IsActive() &&
             agent.IsAIControlled &&
             !ReferenceEquals(agent, Mission.MainAgent) &&
-            TryGetWieldedAutomaticRifle(
+            TryGetWieldedRifle(
                 agent,
                 out _,
                 out _);
@@ -212,9 +217,9 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         _inputSignals.Enqueue(
             new AiInputSignal(
                 agent,
-                hasAutomaticRifle,
+                hasConfiguredRifle,
                 attackRequested));
-        return hasAutomaticRifle;
+        return hasConfiguredRifle;
     }
 
     private void QueueRemoval(Agent agent)
@@ -222,7 +227,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         _inputSignals.Enqueue(
             new AiInputSignal(
                 agent,
-                hasAutomaticRifle: false,
+                hasConfiguredRifle: false,
                 attackRequested: false));
     }
 
@@ -230,16 +235,20 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     {
         while (_inputSignals.TryDequeue(out AiInputSignal signal))
         {
-            if (!signal.HasAutomaticRifle)
+            if (!signal.HasConfiguredRifle)
             {
-                _states.Remove(signal.Agent);
+                CancelState(signal.Agent);
                 continue;
             }
 
             if (!signal.AttackRequested ||
                 _states.ContainsKey(signal.Agent) ||
-                !HasActiveEnemyTarget(signal.Agent) ||
-                !TryGetWieldedAutomaticRifle(
+                (_nextShotTimes.TryGetValue(
+                     signal.Agent,
+                     out float nextShotTime) &&
+                 Mission.CurrentTime < nextShotTime) ||
+                !HasShootableEnemyTarget(signal.Agent) ||
+                !TryGetWieldedRifle(
                     signal.Agent,
                     out EquipmentIndex rifleSlot,
                     out RifleSettings? settings) ||
@@ -264,9 +273,6 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             _states.Add(
                 signal.Agent,
                 new AutomaticFireState(settings, rifleSlot));
-            Debug.Print(
-                $"Druglord: AI automatic trigger engaged for agent " +
-                $"{signal.Agent.Index} with '{settings.ItemId}'.");
         }
     }
 
@@ -283,16 +289,17 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                 state.RifleSlot,
                 out MissionWeapon rifle,
                 out RifleSettings? settings) ||
-            settings is null ||
-            settings.FireMode != RifleFireMode.Automatic)
+            settings is null)
         {
+            CancelState(agent);
             return false;
         }
 
         if (Mission.MissionEnded ||
             Mission.IsMissionEnding ||
-            !HasActiveEnemyTarget(agent))
+            !HasShootableEnemyTarget(agent))
         {
+            CancelState(agent);
             return false;
         }
 
@@ -300,7 +307,13 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         if (state.State != AutomaticRifleState.Reloading &&
             (rifle.Ammo <= 0 || rifle.AmmoWeapon.IsEmpty))
         {
-            return BeginReload(agent, state);
+            if (!BeginReload(agent, state))
+            {
+                CancelState(agent);
+                return false;
+            }
+
+            return true;
         }
 
         switch (state.State)
@@ -313,8 +326,9 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             if (Mission.CurrentTime >= state.RaiseCompletionTime)
             {
                 EnterReady(agent, state);
-                if (!FireAutomaticShot(agent, state, rifle))
+                if (!FireShot(agent, state, rifle))
                 {
+                    CancelState(agent);
                     return false;
                 }
             }
@@ -323,8 +337,9 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         case AutomaticRifleState.Ready:
             if (Mission.CurrentTime >= state.NextShotTime)
             {
-                if (!FireAutomaticShot(agent, state, rifle))
+                if (!FireShot(agent, state, rifle))
                 {
+                    CancelState(agent);
                     return false;
                 }
             }
@@ -333,11 +348,18 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         case AutomaticRifleState.Firing:
             if (Mission.CurrentTime >= state.FiringCompletionTime)
             {
+                if (settings.FireMode == RifleFireMode.SemiAutomatic)
+                {
+                    CancelState(agent);
+                    return false;
+                }
+
                 rifle = agent.Equipment[state.RifleSlot];
                 if (rifle.Ammo <= 0 || rifle.AmmoWeapon.IsEmpty)
                 {
                     if (!BeginReload(agent, state))
                     {
+                        CancelState(agent);
                         return false;
                     }
                 }
@@ -346,8 +368,9 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                     EnterReady(agent, state);
                     if (Mission.CurrentTime >= state.NextShotTime)
                     {
-                        if (!FireAutomaticShot(agent, state, rifle))
+                        if (!FireShot(agent, state, rifle))
                         {
+                            CancelState(agent);
                             return false;
                         }
                     }
@@ -358,8 +381,13 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         case AutomaticRifleState.Reloading:
             if (Mission.CurrentTime >= state.ReloadCompletionTime)
             {
-                CompleteReload(agent, state);
-                return false;
+                if (!CompleteReload(agent, state))
+                {
+                    CancelState(agent);
+                    return false;
+                }
+
+                state.State = AutomaticRifleState.Lowered;
             }
             break;
         }
@@ -397,7 +425,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             blendOutPeriod: 0.08f);
     }
 
-    private bool FireAutomaticShot(
+    private bool FireShot(
         Agent agent,
         AutomaticFireState state,
         MissionWeapon rifle)
@@ -483,12 +511,13 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             Mission.CurrentTime + settings.RecoilDuration;
         state.NextShotTime =
             Mission.CurrentTime + settings.ShotInterval;
+        _nextShotTimes[agent] = state.NextShotTime;
         state.AutomaticShotCount++;
 
         if (state.AutomaticShotCount <= 3 || remainingAmmo == 0)
         {
             Debug.Print(
-                $"Druglord: AI agent {agent.Index} fired automatic " +
+                $"Druglord: AI agent {agent.Index} fired " +
                 $"shot {state.AutomaticShotCount}; magazine " +
                 $"{remainingAmmo}/{settings.MagazineSize}.");
         }
@@ -525,7 +554,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         return true;
     }
 
-    private void CompleteReload(
+    private bool CompleteReload(
         Agent agent,
         AutomaticFireState state)
     {
@@ -540,7 +569,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                 settings,
                 out EquipmentIndex ammunitionSlot))
         {
-            return;
+            return false;
         }
 
         MissionWeapon reserve = agent.Equipment[ammunitionSlot];
@@ -550,7 +579,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             reserveAmount);
         if (roundsToLoad <= 0)
         {
-            return;
+            return false;
         }
 
         MissionWeapon loadedRounds = reserve.Consume(roundsToLoad);
@@ -571,6 +600,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             $"{roundsToLoad} rounds for '{settings.ItemId}' " +
             "without consuming reserve ammunition.");
         _outOfAmmoAgents.Remove(agent);
+        return true;
     }
 
     private void EnsureAiInputHooks()
@@ -582,7 +612,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                 !agent.IsAIControlled ||
                 ReferenceEquals(agent, Mission.MainAgent) ||
                 agent.GetComponent<AutomaticRifleAiComponent>() is not null ||
-                !HasConfiguredAutomaticRifle(agent))
+                !HasConfiguredRifle(agent))
             {
                 continue;
             }
@@ -595,7 +625,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         }
     }
 
-    private static bool HasConfiguredAutomaticRifle(Agent agent)
+    private static bool HasConfiguredRifle(Agent agent)
     {
         for (EquipmentIndex slot = EquipmentIndex.WeaponItemBeginSlot;
              slot < EquipmentIndex.NumAllWeaponSlots;
@@ -605,8 +635,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                     agent,
                     slot,
                     out _,
-                    out RifleSettings? settings) &&
-                settings?.FireMode == RifleFireMode.Automatic)
+                    out _))
             {
                 return true;
             }
@@ -615,7 +644,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         return false;
     }
 
-    private static bool TryGetWieldedAutomaticRifle(
+    private static bool TryGetWieldedRifle(
         Agent agent,
         out EquipmentIndex rifleSlot,
         out RifleSettings? settings)
@@ -630,7 +659,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             return false;
         }
 
-        return settings?.FireMode == RifleFireMode.Automatic;
+        return settings is not null;
     }
 
     private static bool TryGetRifleInSlot(
@@ -677,7 +706,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         return false;
     }
 
-    private static bool HasActiveEnemyTarget(Agent agent)
+    private bool HasShootableEnemyTarget(Agent agent)
     {
         Agent? target = agent.GetTargetAgent();
         if (target is null || !target.IsActive())
@@ -687,9 +716,36 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
 
         Team? agentTeam = agent.Team;
         Team? targetTeam = target.Team;
-        return agentTeam is not null &&
-               targetTeam is not null &&
-               agentTeam.IsEnemyOf(targetTeam);
+        if (agentTeam is null ||
+            targetTeam is null ||
+            !agentTeam.IsEnemyOf(targetTeam))
+        {
+            return false;
+        }
+
+        Vec3 shooterPosition = agent.GetEyeGlobalPosition();
+        Vec3 targetPosition = target.GetChestGlobalPosition();
+        Vec2 horizontalOffset =
+            (targetPosition - shooterPosition).AsVec2;
+        float missileRange =
+            agent.GetMissileRangeWithHeightDifferenceAux(
+                targetPosition.z);
+        if (missileRange <= 0f ||
+            horizontalOffset.LengthSquared >
+            missileRange * missileRange)
+        {
+            return false;
+        }
+
+        Ray sightLine = new Ray(
+            shooterPosition,
+            targetPosition - shooterPosition,
+            true);
+        return !Mission.Scene.RayCastExcludingTwoEntities(
+            BodyFlags.CommonCollisionExcludeFlagsForMissile,
+            in sightLine,
+            agent.AgentVisuals.GetWeakEntity(),
+            target.AgentVisuals.GetWeakEntity());
     }
 
     private static Vec3 GetMuzzlePosition(
@@ -875,5 +931,22 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     private void RemoveState(Agent agent)
     {
         _states.Remove(agent);
+    }
+
+    private void CancelState(Agent agent)
+    {
+        if (!_states.Remove(agent) ||
+            !agent.IsActive())
+        {
+            return;
+        }
+
+        agent.SetActionChannel(
+            1,
+            ActionIndexCache.act_none,
+            ignorePriority: true,
+            blendInPeriod: 0.08f,
+            blendOutPeriodToNoAnim: 0.2f,
+            blendOutPeriod: 0.1f);
     }
 }
