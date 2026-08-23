@@ -130,6 +130,49 @@
   </Item>
 
   <Item
+    id="druglord_m870"
+    name="{=!}M870"
+    is_merchandise="true"
+    body_name="bo_cross_bow_heavy"
+    mesh="druglord_m870"
+    value="3600"
+    weight="3.2"
+    appearance="0.9"
+    difficulty="0"
+    tier_override="3"
+    Type="Musket"
+    AmmoOffset="0.0, 0.02131, 0.24650"
+    item_holsters="crossbow_back:bow_hip:mace_right_hip:bow_hip_2"
+    holster_position_shift="0.02,0,-0.4">
+    <ItemComponent>
+      <Weapon
+        weapon_class="Musket"
+        ammo_class="Arrow"
+        missile_speed="420"
+        accuracy="72"
+        thrust_damage="11"
+        thrust_speed="65"
+        speed_rating="40"
+        weapon_length="126"
+        thrust_damage_type="Pierce"
+        item_usage="crossbow_light"
+        reload_phase_count="2"
+        physics_material="wood_weapon"
+        center_of_mass="0,0,0.4">
+        <WeaponFlags
+          RangedWeapon="true"
+          HasString="true"
+          NotUsableWithOneHand="true"
+          TwoHandIdleOnMount="true"
+          CantReloadOnHorseback="true"
+          CanPenetrateShield="true"
+          CanBeUsedWhileCrouched="true" />
+      </Weapon>
+    </ItemComponent>
+    <Flags />
+  </Item>
+
+  <Item
     id="druglord_cartridge"
     name="{=!}Cartridges"
     is_merchandise="true"

@@ -12,12 +12,14 @@ internal sealed class FirearmMissionLogic : MissionLogic
     private const string SmokeParticleName = "psys_dummy_smoke";
 
     private int _smokeParticleId;
+    private bool _isSpawningAdditionalProjectiles;
     private readonly Dictionary<string, int> _rifleSoundIds =
         new Dictionary<string, int>(StringComparer.Ordinal);
 
     public override void OnBehaviorInitialize()
     {
         base.OnBehaviorInitialize();
+        MissionMissileLauncher.Initialize();
 
         _smokeParticleId = ParticleSystemManager.GetRuntimeIdByName(SmokeParticleName);
 
@@ -36,10 +38,17 @@ internal sealed class FirearmMissionLogic : MissionLogic
         bool hasRigidBody,
         int forcedMissileIndex)
     {
+        if (_isSpawningAdditionalProjectiles)
+        {
+            return;
+        }
+
         if (!TryGetFirearm(
                 shooterAgent,
                 weaponIndex,
-                out string itemId))
+                out string itemId,
+                out RifleSettings? settings) ||
+            settings is null)
         {
             return;
         }
@@ -65,6 +74,89 @@ internal sealed class FirearmMissionLogic : MissionLogic
         }
 
         Mission.AddSoundAlarmFactorToAgents(shooterAgent, position, 18f);
+        SpawnAdditionalProjectiles(
+            shooterAgent,
+            weaponIndex,
+            position,
+            velocity,
+            orientation,
+            hasRigidBody,
+            settings);
+    }
+
+    private void SpawnAdditionalProjectiles(
+        Agent shooterAgent,
+        EquipmentIndex weaponIndex,
+        Vec3 position,
+        Vec3 velocity,
+        Mat3 orientation,
+        bool hasRigidBody,
+        RifleSettings settings)
+    {
+        if (settings.ProjectileCountPerShot <= 1)
+        {
+            return;
+        }
+
+        Vec3 centerDirection = velocity;
+        float missileSpeed = centerDirection.Normalize();
+        if (missileSpeed <= 0f)
+        {
+            throw new InvalidOperationException(
+                $"Cannot spawn projectiles for '{settings.ItemId}' " +
+                "with zero missile velocity.");
+        }
+
+        float spreadRadians =
+            settings.MaximumSpreadDegrees.ToRadians();
+        _isSpawningAdditionalProjectiles = true;
+        try
+        {
+            for (int projectileIndex = 1;
+                 projectileIndex < settings.ProjectileCountPerShot;
+                 projectileIndex++)
+            {
+                Mat3 projectileOrientation = orientation;
+                projectileOrientation.Orthonormalize();
+
+                if (spreadRadians > 0f)
+                {
+                    float horizontalFactor;
+                    float verticalFactor;
+                    do
+                    {
+                        horizontalFactor =
+                            MBRandom.RandomFloatRanged(-1f, 1f);
+                        verticalFactor =
+                            MBRandom.RandomFloatRanged(-1f, 1f);
+                    }
+                    while (horizontalFactor * horizontalFactor +
+                           verticalFactor * verticalFactor > 1f);
+
+                    projectileOrientation.RotateAboutUp(
+                        horizontalFactor * spreadRadians);
+                    projectileOrientation.RotateAboutSide(
+                        verticalFactor * spreadRadians);
+                }
+
+                Vec3 projectileVelocity =
+                    projectileOrientation.f * missileSpeed;
+                MissionMissileLauncher.Shoot(
+                    Mission,
+                    shooterAgent,
+                    weaponIndex,
+                    position,
+                    projectileVelocity,
+                    projectileOrientation,
+                    hasRigidBody,
+                    isPrimaryWeaponShot: false,
+                    forcedMissileIndex: -1);
+            }
+        }
+        finally
+        {
+            _isSpawningAdditionalProjectiles = false;
+        }
     }
 
     private int GetSoundId(string itemId)
@@ -106,9 +198,11 @@ internal sealed class FirearmMissionLogic : MissionLogic
     private static bool TryGetFirearm(
         Agent shooterAgent,
         EquipmentIndex weaponIndex,
-        out string itemId)
+        out string itemId,
+        out RifleSettings? settings)
     {
         itemId = string.Empty;
+        settings = null;
 
         if (shooterAgent is null || weaponIndex == EquipmentIndex.None)
         {
@@ -131,6 +225,6 @@ internal sealed class FirearmMissionLogic : MissionLogic
         return RifleSettingsRegistry.TryGet(
             Game.Current,
             itemId,
-            out _);
+            out settings);
     }
 }

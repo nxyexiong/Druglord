@@ -1,5 +1,4 @@
 using System;
-using HarmonyLib;
 using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.InputSystem;
@@ -20,18 +19,6 @@ internal sealed class RifleControlMissionLogic : MissionLogic
         Reloading
     }
 
-    private delegate void ShootMissileDelegate(
-        Mission mission,
-        Agent shooterAgent,
-        EquipmentIndex weaponIndex,
-        Vec3 position,
-        Vec3 velocity,
-        Mat3 orientation,
-        bool hasRigidBody,
-        bool isPrimaryWeaponShot,
-        int forcedMissileIndex);
-
-    private ShootMissileDelegate? _shootMissile;
     private ActionIndexCache _readyAction;
     private ActionIndexCache _readyContinueAction;
     private ActionIndexCache _releaseAction;
@@ -66,26 +53,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
     {
         base.OnBehaviorInitialize();
         RifleSettingsRegistry.EnsureLoaded(Game.Current);
-
-        System.Reflection.MethodInfo shootMethod = AccessTools.Method(
-            typeof(Mission),
-            "OnAgentShootMissile",
-            new[]
-            {
-                typeof(Agent),
-                typeof(EquipmentIndex),
-                typeof(Vec3),
-                typeof(Vec3),
-                typeof(Mat3),
-                typeof(bool),
-                typeof(bool),
-                typeof(int)
-            }) ?? throw new MissingMethodException(
-                typeof(Mission).FullName,
-                "OnAgentShootMissile");
-
-        _shootMissile = (ShootMissileDelegate)shootMethod.CreateDelegate(
-            typeof(ShootMissileDelegate));
+        MissionMissileLauncher.Initialize();
         _readyAction = ActionIndexCache.Create("act_ready_crossbow");
         _readyContinueAction =
             ActionIndexCache.Create("act_ready_continue_crossbow");
@@ -369,8 +337,7 @@ internal sealed class RifleControlMissionLogic : MissionLogic
             rifle.GetModifiedMissileSpeedForCurrentUsage();
         Vec3 velocity = direction * missileSpeed;
 
-        (_shootMissile ?? throw new InvalidOperationException(
-            "Druglord rifle shooting was not initialized."))(
+        MissionMissileLauncher.Shoot(
             Mission,
             agent,
             rifleSlot,
@@ -405,7 +372,8 @@ internal sealed class RifleControlMissionLogic : MissionLogic
 
         Debug.Print(
             $"Druglord: {_activeRifleName} fired; magazine " +
-            $"{remainingAmmo}/{settings.MagazineSize}; recoil " +
+            $"{remainingAmmo}/{settings.MagazineSize}; projectiles " +
+            $"{settings.ProjectileCountPerShot}; recoil " +
             $"{recoilShotCount}/{settings.PeakRecoilShotCount}.");
     }
 

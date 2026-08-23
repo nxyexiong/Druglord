@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using HarmonyLib;
 using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.Library;
@@ -36,17 +35,6 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         Firing,
         Reloading
     }
-
-    private delegate void ShootMissileDelegate(
-        Mission mission,
-        Agent shooterAgent,
-        EquipmentIndex weaponIndex,
-        Vec3 position,
-        Vec3 velocity,
-        Mat3 orientation,
-        bool hasRigidBody,
-        bool isPrimaryWeaponShot,
-        int forcedMissileIndex);
 
     private sealed class AutomaticRifleAiComponent : AgentComponent
     {
@@ -114,7 +102,6 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     private readonly List<Agent> _removalBuffer =
         new List<Agent>();
 
-    private ShootMissileDelegate? _shootMissile;
     private ActionIndexCache _readyAction;
     private ActionIndexCache _releaseAction;
     private ActionIndexCache _reloadAction;
@@ -123,26 +110,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
     {
         base.OnBehaviorInitialize();
         RifleSettingsRegistry.EnsureLoaded(Game.Current);
-
-        System.Reflection.MethodInfo shootMethod = AccessTools.Method(
-            typeof(Mission),
-            "OnAgentShootMissile",
-            new[]
-            {
-                typeof(Agent),
-                typeof(EquipmentIndex),
-                typeof(Vec3),
-                typeof(Vec3),
-                typeof(Mat3),
-                typeof(bool),
-                typeof(bool),
-                typeof(int)
-            }) ?? throw new MissingMethodException(
-                typeof(Mission).FullName,
-                "OnAgentShootMissile");
-
-        _shootMissile = (ShootMissileDelegate)shootMethod.CreateDelegate(
-            typeof(ShootMissileDelegate));
+        MissionMissileLauncher.Initialize();
         _readyAction =
             ActionIndexCache.Create("act_ready_continue_crossbow");
         _releaseAction = ActionIndexCache.Create("act_release_crossbow");
@@ -487,8 +455,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
             rifle.GetModifiedMissileSpeedForCurrentUsage();
         Vec3 velocity = direction * missileSpeed;
 
-        (_shootMissile ?? throw new InvalidOperationException(
-            "Druglord automatic-rifle AI shooting was not initialized."))(
+        MissionMissileLauncher.Shoot(
             Mission,
             agent,
             state.RifleSlot,

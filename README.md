@@ -28,9 +28,9 @@ that the published client asset package exists:
 src\Druglord\_Module\AssetPackages\pack0.tpac
 ```
 
-This TPAC is a required build input. It contains the runtime AKM and AWP
-models, materials, and textures. The files under `Assets` and `AssetSources`
-are editor inputs and are not substitutes for a published client package.
+This TPAC is a required build input. It contains the runtime firearm models,
+materials, and textures. The files under `Assets` and `AssetSources` are
+editor inputs and are not substitutes for a published client package.
 
 From the repository root, run:
 
@@ -127,6 +127,7 @@ The module currently adds:
 - `druglord_akm`: `Musket` weapon class
 - `druglord_awp`: `Musket` weapon class
 - `druglord_ppsh41`: `Musket` weapon class
+- `druglord_m870`: `Musket` weapon class with 9-projectile buckshot
 - `druglord_cartridge`: shared firearm ammunition
 
 The firearms temporarily use the light-crossbow animations and their imported
@@ -150,6 +151,11 @@ The PPSh-41 model is by Artem Goyko, is licensed under
 under `src\Druglord\_Module\AssetSources\Weapons\PPSh41`. See its attribution
 file in that directory for modification details.
 
+The generic pump-action shotgun model used for the M870 is by SuperMopsek, is
+licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and
+is included under `src\Druglord\_Module\AssetSources\Weapons\M870`. See its
+attribution file in that directory for modification details.
+
 The main menu also includes **Druglord Debug Battle**. Both forces have
 10 Recruits, 10 Assault troops, and 10 Snipers. A loaded copy of every
 configured firearm and a matching ammunition stack are dropped near the
@@ -171,6 +177,10 @@ horizontal recoil and projectile spread.
 The PPSh-41 is fully automatic at approximately 900 rounds per minute, uses a
 71-round drum magazine, and fires at 488 m/s. It trades per-shot damage and
 accuracy for close-range volume of fire.
+
+The M870 is a six-round semi-automatic gameplay approximation of a pump-action
+shotgun. It fires at most once every 0.9 seconds and has heavy recoil and
+close-range spread.
 
 Rifle behavior is data-driven through
 `src\Druglord\_Module\ModuleData\druglord_rifles.xml`. Each rifle item has its

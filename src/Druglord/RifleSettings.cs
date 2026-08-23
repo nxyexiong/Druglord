@@ -34,6 +34,7 @@ internal sealed class RifleSettings
         bool isDebugLoadout,
         RifleFireMode fireMode,
         short magazineSize,
+        int projectileCountPerShot,
         float shotInterval,
         float raiseDuration,
         float recoilDuration,
@@ -55,6 +56,7 @@ internal sealed class RifleSettings
         IsDebugLoadout = isDebugLoadout;
         FireMode = fireMode;
         MagazineSize = magazineSize;
+        ProjectileCountPerShot = projectileCountPerShot;
         ShotInterval = shotInterval;
         RaiseDuration = raiseDuration;
         RecoilDuration = recoilDuration;
@@ -77,6 +79,7 @@ internal sealed class RifleSettings
     internal bool IsDebugLoadout { get; }
     internal RifleFireMode FireMode { get; }
     internal short MagazineSize { get; }
+    internal int ProjectileCountPerShot { get; }
     internal float ShotInterval { get; }
     internal float RaiseDuration { get; }
     internal float RecoilDuration { get; }
@@ -247,6 +250,7 @@ internal static class RifleSettingsRegistry
             ParseBoolean(node, "debug_loadout", false),
             fireMode,
             ParseInt16(node, "magazine_size"),
+            ParseInt32(node, "projectile_count_per_shot"),
             ParseSingle(node, "shot_interval"),
             ParseSingle(node, "raise_duration"),
             ParseSingle(node, "recoil_duration"),
@@ -271,6 +275,12 @@ internal static class RifleSettingsRegistry
         if (settings.MagazineSize <= 0)
         {
             throw InvalidValue(settings, "magazine_size");
+        }
+
+        if (settings.ProjectileCountPerShot <= 0 ||
+            settings.ProjectileCountPerShot > 32)
+        {
+            throw InvalidValue(settings, "projectile_count_per_shot");
         }
 
         if (settings.ShotInterval <= 0f)

@@ -15,5 +15,9 @@
       name="druglord/firearms/gunshot3"
       sound_category="mission_combat"
       path="gunshot3.wav" />
+    <module_sound
+      name="druglord/firearms/gunshot4"
+      sound_category="mission_combat"
+      path="gunshot4.wav" />
   </module_sounds>
 </base>
