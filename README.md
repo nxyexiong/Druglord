@@ -110,13 +110,16 @@ to work.
 
 ## Outlaw party growth
 
-Every active non-looter bandit party grows once per campaign day. Member and
+Every active bandit party grows once per campaign day. Non-looter member and
 prisoner growth are calculated independently. Each existing non-hero troop
 type gains one-third of its current count per day, using integer division with
 a minimum increase of one. This applies to both member and prisoner troop
 types and spreads growth across the roster instead of selecting one random
-type. A roster below 200 receives its full daily growth and may pass 200; its
-growth stops on subsequent days once it is at or above 200.
+type. Looter parties do not grow their member looters, but their prisoners
+still grow normally. An empty prisoner roster receives one culture-appropriate
+peasant (an Empire peasant for looters), which then follows the same prisoner
+growth rule. A roster below 200 receives its full daily growth and may pass
+200; its growth stops on subsequent days once it is at or above 200.
 
 ## Firearms
 
