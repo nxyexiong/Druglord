@@ -1,0 +1,100 @@
+{
+  "source": "C:\\UserData\\workspace\\Druglord\\src\\Druglord\\_Module\\AssetSources\\Weapons\\M79\\Original\\source\\topaint1307_uv_overlapped.fbx",
+  "output": "C:\\UserData\\workspace\\Druglord\\src\\Druglord\\_Module\\AssetSources\\Weapons\\M79\\Import\\druglord_m79.fbx",
+  "base_target_length": 0.731,
+  "scale_multiplier": 1.2,
+  "target_length": 0.8772,
+  "vertical_offset": -0.04,
+  "source_length": 4.7447509765625,
+  "scale": 0.1848779850266279,
+  "grip_pivot": [
+    1.793720006942749,
+    0.05719629302620888,
+    3.9637045860290527
+  ],
+  "muzzle_section_length": 0.2,
+  "muzzle_polygon_count": 273,
+  "source_bounds": {
+    "minimum": [
+      -0.4706270098686218,
+      -0.21754130721092224,
+      3.8248419761657715
+    ],
+    "maximum": [
+      4.2741241455078125,
+      0.34845051169395447,
+      5.59922981262207
+    ],
+    "dimensions": [
+      4.7447509765625,
+      0.5659918189048767,
+      1.7743878364562988
+    ]
+  },
+  "bounds": {
+    "minimum": [
+      -0.05079294741153717,
+      -0.458572119474411,
+      -0.06567263603210449
+    ],
+    "maximum": [
+      0.053846489638090134,
+      0.41862791776657104,
+      0.26237261295318604
+    ],
+    "dimensions": [
+      0.1046394407749176,
+      0.8772000074386597,
+      0.3280452489852905
+    ]
+  },
+  "source_mesh": {
+    "mesh_count": 40,
+    "vertices": 4489,
+    "triangles": 8462
+  },
+  "meshes": [
+    {
+      "name": "druglord_m79",
+      "vertices": 4489,
+      "triangles": 8462,
+      "materials": [
+        "druglord_m79",
+        "druglord_m79_muzzle"
+      ]
+    },
+    {
+      "name": "druglord_m79.lod1",
+      "vertices": 2780,
+      "triangles": 5076,
+      "materials": [
+        "druglord_m79",
+        "druglord_m79_muzzle"
+      ]
+    },
+    {
+      "name": "druglord_m79.lod2",
+      "vertices": 1563,
+      "triangles": 2707,
+      "materials": [
+        "druglord_m79",
+        "druglord_m79_muzzle"
+      ]
+    },
+    {
+      "name": "druglord_m79.lod3",
+      "vertices": 749,
+      "triangles": 1183,
+      "materials": [
+        "druglord_m79",
+        "druglord_m79_muzzle"
+      ]
+    },
+    {
+      "name": "bo_druglord_m79",
+      "vertices": 8,
+      "triangles": 12,
+      "materials": []
+    }
+  ]
+}

@@ -173,6 +173,48 @@
   </Item>
 
   <Item
+    id="druglord_m79"
+    name="{=!}M79"
+    is_merchandise="true"
+    body_name="bo_cross_bow_heavy"
+    mesh="druglord_m79"
+    value="4500"
+    weight="2.93"
+    appearance="1.0"
+    difficulty="0"
+    tier_override="3"
+    Type="Musket"
+    AmmoOffset="0.0, 0.02131, 0.24650"
+    item_holsters="crossbow_back:bow_hip:mace_right_hip:bow_hip_2"
+    holster_position_shift="0.02,0,-0.4">
+    <ItemComponent>
+      <Weapon
+        weapon_class="Musket"
+        ammo_class="Arrow"
+        missile_speed="76"
+        accuracy="88"
+        thrust_damage="1"
+        thrust_speed="62"
+        speed_rating="38"
+        weapon_length="88"
+        thrust_damage_type="Blunt"
+        item_usage="crossbow_light"
+        reload_phase_count="2"
+        physics_material="wood_weapon"
+        center_of_mass="0,0,0.3">
+        <WeaponFlags
+          RangedWeapon="true"
+          HasString="true"
+          NotUsableWithOneHand="true"
+          TwoHandIdleOnMount="true"
+          CantReloadOnHorseback="true"
+          CanBeUsedWhileCrouched="true" />
+      </Weapon>
+    </ItemComponent>
+    <Flags />
+  </Item>
+
+  <Item
     id="druglord_cartridge"
     name="{=!}Cartridges"
     is_merchandise="true"
@@ -213,4 +255,5 @@
     <Flags
       ForceAttachOffHandPrimaryItemBone="true" />
   </Item>
+
 </Items>

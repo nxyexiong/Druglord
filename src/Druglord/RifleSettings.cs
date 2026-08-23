@@ -35,6 +35,7 @@ internal sealed class RifleSettings
         RifleFireMode fireMode,
         short magazineSize,
         int projectileCountPerShot,
+        bool isExplosive,
         float shotInterval,
         float raiseDuration,
         float recoilDuration,
@@ -57,6 +58,7 @@ internal sealed class RifleSettings
         FireMode = fireMode;
         MagazineSize = magazineSize;
         ProjectileCountPerShot = projectileCountPerShot;
+        IsExplosive = isExplosive;
         ShotInterval = shotInterval;
         RaiseDuration = raiseDuration;
         RecoilDuration = recoilDuration;
@@ -80,6 +82,7 @@ internal sealed class RifleSettings
     internal RifleFireMode FireMode { get; }
     internal short MagazineSize { get; }
     internal int ProjectileCountPerShot { get; }
+    internal bool IsExplosive { get; }
     internal float ShotInterval { get; }
     internal float RaiseDuration { get; }
     internal float RecoilDuration { get; }
@@ -251,6 +254,7 @@ internal static class RifleSettingsRegistry
             fireMode,
             ParseInt16(node, "magazine_size"),
             ParseInt32(node, "projectile_count_per_shot"),
+            ParseRequiredBoolean(node, "is_explosive"),
             ParseSingle(node, "shot_interval"),
             ParseSingle(node, "raise_duration"),
             ParseSingle(node, "recoil_duration"),
@@ -281,6 +285,14 @@ internal static class RifleSettingsRegistry
             settings.ProjectileCountPerShot > 32)
         {
             throw InvalidValue(settings, "projectile_count_per_shot");
+        }
+
+        if (settings.IsExplosive &&
+            settings.ProjectileCountPerShot != 1)
+        {
+            throw new InvalidDataException(
+                $"Explosive rifle '{settings.ItemId}' must fire exactly " +
+                "one projectile per shot.");
         }
 
         if (settings.ShotInterval <= 0f)
@@ -394,6 +406,20 @@ internal static class RifleSettingsRegistry
             return defaultValue;
         }
 
+        if (!bool.TryParse(value, out bool result))
+        {
+            throw new InvalidDataException(
+                $"Rifle setting '{name}' must be true or false.");
+        }
+
+        return result;
+    }
+
+    private static bool ParseRequiredBoolean(
+        XmlNode node,
+        string name)
+    {
+        string value = GetRequiredAttribute(node, name);
         if (!bool.TryParse(value, out bool result))
         {
             throw new InvalidDataException(

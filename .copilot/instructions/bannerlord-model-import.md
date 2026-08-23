@@ -205,33 +205,21 @@ C:\UserData\workspace\Druglord\src\Druglord\_Module\AssetSources\druglord_ppsh41
 C:\UserData\workspace\Druglord\src\Druglord\_Module\AssetSources\druglord_ppsh41_s.tga
 ```
 
-Use the MSBuild deploy target for Editor authoring because it retains
-development directories:
+Use the dedicated MSBuild Editor deploy target. It retains development
+directories, restores legacy source aliases, restores published runtime
+caches, mirrors the Editor binaries, and fails if any active TPAC source path
+is missing:
 
 ```powershell
 dotnet build `
   "C:\UserData\workspace\Druglord\src\Druglord\Druglord.csproj" `
   -c Debug `
-  -t:Deploy `
+  -t:DeployEditor `
   --nologo
 ```
 
 Do not use `build.cmd` for this stage; it intentionally removes `Assets`,
 `AssetSources`, and `RuntimeDataCache`.
-
-If the Editor binary directory is required, mirror the module binaries:
-
-```powershell
-$module = "C:\UserData\Steam\steamapps\common\Mount & Blade II Bannerlord\Modules\Druglord"
-$editorBin = Join-Path $module "bin\Win64_Shipping_wEditor"
-
-New-Item -ItemType Directory -Path $editorBin -Force | Out-Null
-Copy-Item -LiteralPath `
-  (Join-Path $module "bin\Win64_Shipping_Client\Druglord.dll"), `
-  (Join-Path $module "bin\Win64_Shipping_Client\0Harmony.dll") `
-  -Destination $editorBin `
-  -Force
-```
 
 Before the user launches the Editor, confirm:
 

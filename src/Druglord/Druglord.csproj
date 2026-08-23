@@ -92,4 +92,12 @@
       Text="Deployed $(ModuleId) to '$(BannerlordGameDir)\Modules\$(ModuleId)'." />
   </Target>
 
+  <Target Name="DeployEditor" DependsOnTargets="Deploy">
+    <Exec
+      Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\tools\stage-bannerlord-editor.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)\..\..&quot; -InstalledModulePath &quot;$(BannerlordGameDir)\Modules\$(ModuleId)&quot;" />
+    <Message
+      Importance="high"
+      Text="Prepared $(ModuleId) editor authoring dependencies." />
+  </Target>
+
 </Project>

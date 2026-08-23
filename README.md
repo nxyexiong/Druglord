@@ -128,6 +128,7 @@ The module currently adds:
 - `druglord_awp`: `Musket` weapon class
 - `druglord_ppsh41`: `Musket` weapon class
 - `druglord_m870`: `Musket` weapon class with 9-projectile buckshot
+- `druglord_m79`: single-shot `Musket` grenade launcher with radial explosions
 - `druglord_cartridge`: shared firearm ammunition
 
 The firearms temporarily use the light-crossbow animations and their imported
@@ -155,6 +156,11 @@ The generic pump-action shotgun model used for the M870 is by SuperMopsek, is
 licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and
 is included under `src\Druglord\_Module\AssetSources\Weapons\M870`. See its
 attribution file in that directory for modification details.
+
+The M79 model is by denis1.eremin, is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and is included
+under `src\Druglord\_Module\AssetSources\Weapons\M79`. See its attribution
+file in that directory for modification details.
 
 The main menu also includes **Druglord Debug Battle**. Both forces have
 10 Recruits, 10 Assault troops, and 10 Snipers. A loaded copy of every
@@ -186,6 +192,8 @@ Rifle behavior is data-driven through
 `src\Druglord\_Module\ModuleData\druglord_rifles.xml`. Each rifle item has its
 own ammunition, fire mode, magazine, timing, recoil, and spread values, so
 additional rifles can use the same `RifleControlMissionLogic`. Rifles marked
+as explosive detonate on agent, object, or ground impact and apply
+distance-falloff damage within a ten-metre radius. Rifles marked
 `debug_loadout="true"` are distributed across debug-battle soldiers.
 Each rifle also defines its muzzle point in model-local coordinates; firing
 selects a configured material submesh and bounding-box face, transforms that
