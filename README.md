@@ -110,15 +110,13 @@ to work.
 
 ## Outlaw party growth
 
-Every active bandit party grows once per campaign day. Member and prisoner
-growth are calculated independently as
-`max(0, floor(-0.1 * current_size + 5))`.
-
-New members are randomly selected from the party's existing non-hero troop
-types, weighted by each type's current count. New prisoners are peasants
-matching the outlaw culture: looters use Empire peasants, while sea raiders,
-mountain bandits, forest bandits, desert bandits, and steppe bandits use
-Sturgian, Vlandian, Battanian, Aserai, and Khuzait peasants respectively.
+Every active non-looter bandit party grows once per campaign day. Member and
+prisoner growth are calculated independently. Each existing non-hero troop
+type gains one-third of its current count per day, using integer division with
+a minimum increase of one. This applies to both member and prisoner troop
+types and spreads growth across the roster instead of selecting one random
+type. A roster below 200 receives its full daily growth and may pass 200; its
+growth stops on subsequent days once it is at or above 200.
 
 ## Firearms
 

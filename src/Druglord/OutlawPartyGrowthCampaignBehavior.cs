@@ -3,27 +3,14 @@ using System.Collections.Generic;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Roster;
-using TaleWorlds.Core;
-using TaleWorlds.Library;
 
 namespace Druglord;
 
 internal sealed class OutlawPartyGrowthCampaignBehavior : CampaignBehaviorBase
 {
-    private static readonly Dictionary<string, string>
-        PeasantIdByOutlawCulture =
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["looters"] = "villager_empire",
-                ["sea_raiders"] = "villager_sturgia",
-                ["mountain_bandits"] = "villager_vlandia",
-                ["forest_bandits"] = "villager_battania",
-                ["desert_bandits"] = "villager_aserai",
-                ["steppe_bandits"] = "villager_khuzait"
-            };
-
-    private readonly HashSet<string> _reportedMissingPeasantCultures =
-        new HashSet<string>(StringComparer.Ordinal);
+    private const int GrowthStopPopulation = 200;
+    private const int GrowthDivisor = 3;
+    private const string LooterCultureId = "looters";
 
     public override void RegisterEvents()
     {
@@ -36,138 +23,63 @@ internal sealed class OutlawPartyGrowthCampaignBehavior : CampaignBehaviorBase
     {
     }
 
-    internal static int CalculateDailyGrowth(int currentSize)
+    internal static int CalculateTroopTypeGrowth(int currentCount)
     {
-        if (currentSize < 0)
+        if (currentCount < 0)
         {
             throw new ArgumentOutOfRangeException(
-                nameof(currentSize),
-                currentSize,
-                "Party size cannot be negative.");
+                nameof(currentCount),
+                currentCount,
+                "Troop count cannot be negative.");
         }
 
-        // Exact integer form of max(0, floor(-0.1x + 5)).
-        int growthNumerator = 50 - currentSize;
-        return growthNumerator > 0
-            ? growthNumerator / 10
-            : 0;
+        return currentCount == 0
+            ? 0
+            : Math.Max(1, currentCount / GrowthDivisor);
     }
 
     private void OnDailyTickParty(MobileParty party)
     {
-        if (!party.IsActive || !party.IsBandit)
+        if (!party.IsActive ||
+            !party.IsBandit ||
+            string.Equals(
+                party.Party.Culture?.StringId,
+                LooterCultureId,
+                StringComparison.Ordinal))
         {
             return;
         }
 
-        GrowMembers(party);
-        GrowPrisoners(party);
+        GrowRoster(party.MemberRoster);
+        GrowRoster(party.PrisonRoster);
     }
 
-    private static void GrowMembers(MobileParty party)
+    private static void GrowRoster(TroopRoster roster)
     {
-        int growth = CalculateDailyGrowth(
-            party.MemberRoster.TotalManCount);
-        if (growth == 0)
+        if (roster.TotalManCount >= GrowthStopPopulation)
         {
             return;
         }
 
-        List<TroopRosterElement> weightedTroops =
+        List<TroopRosterElement> troopTypes =
             new List<TroopRosterElement>();
-        int totalWeight = 0;
 
         foreach (TroopRosterElement element in
-                 party.MemberRoster.GetTroopRoster())
+                 roster.GetTroopRoster())
         {
             if (element.Number <= 0 || element.Character.IsHero)
             {
                 continue;
             }
 
-            weightedTroops.Add(element);
-            totalWeight += element.Number;
+            troopTypes.Add(element);
         }
 
-        if (totalWeight == 0)
+        foreach (TroopRosterElement troopType in troopTypes)
         {
-            return;
+            roster.AddToCounts(
+                troopType.Character,
+                CalculateTroopTypeGrowth(troopType.Number));
         }
-
-        for (int addition = 0; addition < growth; addition++)
-        {
-            int roll = MBRandom.RandomInt(totalWeight);
-
-            foreach (TroopRosterElement element in weightedTroops)
-            {
-                if (roll < element.Number)
-                {
-                    party.MemberRoster.AddToCounts(
-                        element.Character,
-                        1);
-                    break;
-                }
-
-                roll -= element.Number;
-            }
-        }
-    }
-
-    private void GrowPrisoners(MobileParty party)
-    {
-        int growth = CalculateDailyGrowth(
-            party.PrisonRoster.TotalManCount);
-        if (growth == 0)
-        {
-            return;
-        }
-
-        CharacterObject? peasant = ResolvePeasant(party);
-        if (peasant is null)
-        {
-            return;
-        }
-
-        party.PrisonRoster.AddToCounts(peasant, growth);
-    }
-
-    private CharacterObject? ResolvePeasant(MobileParty party)
-    {
-        CultureObject? partyCulture = party.Party.Culture;
-        CharacterObject? peasant = partyCulture?.Villager;
-        if (peasant is not null)
-        {
-            return peasant;
-        }
-
-        CultureObject? homeCulture = party.HomeSettlement?.Culture;
-        peasant = homeCulture?.Villager;
-        if (peasant is not null)
-        {
-            return peasant;
-        }
-
-        string? cultureId =
-            partyCulture?.StringId ?? homeCulture?.StringId;
-        if (cultureId is not null &&
-            PeasantIdByOutlawCulture.TryGetValue(
-                cultureId,
-                out string peasantId))
-        {
-            return Game.Current.ObjectManager
-                       .GetObject<CharacterObject>(peasantId) ??
-                   throw new InvalidOperationException(
-                       $"Mapped peasant troop '{peasantId}' is unavailable.");
-        }
-
-        string reportKey = cultureId ?? "<none>";
-        if (_reportedMissingPeasantCultures.Add(reportKey))
-        {
-            Debug.Print(
-                "Druglord: no peasant troop mapping exists for outlaw " +
-                $"culture '{reportKey}'.");
-        }
-
-        return null;
     }
 }
