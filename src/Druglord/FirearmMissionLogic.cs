@@ -303,7 +303,7 @@ internal sealed class FirearmMissionLogic : MissionLogic
         _explosionTargets.Clear();
         foreach (Agent targetAgent in Mission.Agents)
         {
-            if (!CanReceiveExplosionDamage(targetAgent) ||
+            if (!CanReceiveExplosionDamage(shooterAgent, targetAgent) ||
                 (targetAgent.CollisionCapsuleCenter - impactPosition)
                     .LengthSquared >= ExplosionRadius * ExplosionRadius)
             {
@@ -314,7 +314,7 @@ internal sealed class FirearmMissionLogic : MissionLogic
         }
 
         if (victimAgent is not null &&
-            CanReceiveExplosionDamage(victimAgent) &&
+            CanReceiveExplosionDamage(shooterAgent, victimAgent) &&
             !_explosionTargets.Contains(victimAgent))
         {
             _explosionTargets.Add(victimAgent);
@@ -333,16 +333,23 @@ internal sealed class FirearmMissionLogic : MissionLogic
             $"and damaged {_explosionTargets.Count} agent(s).");
     }
 
-    private static bool CanReceiveExplosionDamage(Agent targetAgent)
+    private static bool CanReceiveExplosionDamage(
+        Agent shooterAgent,
+        Agent targetAgent)
     {
-        if (!targetAgent.IsActive() ||
+        if (targetAgent == shooterAgent ||
+            !targetAgent.IsActive() ||
             targetAgent.CurrentMortalityState ==
                 Agent.MortalityState.Invulnerable)
         {
             return false;
         }
 
-        return true;
+        Team? shooterTeam = shooterAgent.Team;
+        Team? targetTeam = targetAgent.Team;
+        return shooterTeam is null ||
+            targetTeam is null ||
+            shooterTeam.IsEnemyOf(targetTeam);
     }
 
     private static void ApplyExplosionDamage(
