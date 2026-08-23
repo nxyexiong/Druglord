@@ -128,7 +128,9 @@ internal sealed class FirearmMissionLogic : MissionLogic
         }
 
         itemId = weapon.Item.StringId;
-        return itemId == FirearmItemRegistry.AkmId ||
-               itemId == FirearmItemRegistry.AwpId;
+        return RifleSettingsRegistry.TryGet(
+            Game.Current,
+            itemId,
+            out _);
     }
 }

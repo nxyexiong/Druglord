@@ -18,8 +18,16 @@ public sealed class SubModule : MBSubModuleBase
     {
         base.OnSubModuleLoad();
 
-        _harmony = new Harmony(HarmonyId);
-        HarmonyPatches.Apply(_harmony);
+        if (IsEditorProcess())
+        {
+            Debug.Print(
+                "Druglord: skipping runtime Harmony patches in the Bannerlord editor.");
+        }
+        else
+        {
+            _harmony = new Harmony(HarmonyId);
+            HarmonyPatches.Apply(_harmony);
+        }
 
         Module.CurrentModule.AddInitialStateOption(
             new InitialStateOption(
@@ -39,7 +47,7 @@ public sealed class SubModule : MBSubModuleBase
                 () => DebugBattleLauncher.IsPending
                     ? (true, new TextObject("{=!}The debug battle is loading."))
                     : (false, new TextObject(string.Empty)),
-                new TextObject("{=!}Launch a custom battle where the player carries the AKM and AWP and every soldier has ammunition.")));
+                new TextObject("{=!}Launch a custom battle where the player carries every configured firearm and every soldier has ammunition.")));
 #endif
     }
 
@@ -123,5 +131,12 @@ public sealed class SubModule : MBSubModuleBase
                 null),
             false,
             false);
+    }
+
+    private static bool IsEditorProcess()
+    {
+        return AppDomain.CurrentDomain.BaseDirectory.IndexOf(
+            "Win64_Shipping_wEditor",
+            StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }

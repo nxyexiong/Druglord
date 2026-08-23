@@ -87,6 +87,49 @@
   </Item>
 
   <Item
+    id="druglord_ppsh41"
+    name="{=!}PPSh-41"
+    is_merchandise="true"
+    body_name="bo_cross_bow_heavy"
+    mesh="druglord_ppsh41"
+    value="4200"
+    weight="5.45"
+    appearance="0.95"
+    difficulty="0"
+    tier_override="3"
+    Type="Musket"
+    AmmoOffset="0.0, 0.02131, 0.24650"
+    item_holsters="crossbow_back:bow_hip:mace_right_hip:bow_hip_2"
+    holster_position_shift="0.02,0,-0.4">
+    <ItemComponent>
+      <Weapon
+        weapon_class="Musket"
+        ammo_class="Arrow"
+        missile_speed="488"
+        accuracy="82"
+        thrust_damage="76"
+        thrust_speed="82"
+        speed_rating="60"
+        weapon_length="101"
+        thrust_damage_type="Pierce"
+        item_usage="crossbow_light"
+        reload_phase_count="2"
+        physics_material="wood_weapon"
+        center_of_mass="0,0,0.4">
+        <WeaponFlags
+          RangedWeapon="true"
+          HasString="true"
+          NotUsableWithOneHand="true"
+          TwoHandIdleOnMount="true"
+          CantReloadOnHorseback="true"
+          CanPenetrateShield="true"
+          CanBeUsedWhileCrouched="true" />
+      </Weapon>
+    </ItemComponent>
+    <Flags />
+  </Item>
+
+  <Item
     id="druglord_cartridge"
     name="{=!}Cartridges"
     is_merchandise="true"

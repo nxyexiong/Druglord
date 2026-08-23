@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using TaleWorlds.Core;
@@ -10,35 +11,15 @@ namespace Druglord;
 
 internal static class FirearmItemRegistry
 {
-    internal const string AkmId = "druglord_akm";
-    internal const string AwpId = "druglord_awp";
     internal const string CartridgeId = "druglord_cartridge";
 
     private const string ModuleId = "Druglord";
     private const string ItemsFileName = "druglord_items.xml";
 
     private static Game? _registeredGame;
-    private static ItemObject? _akm;
-    private static ItemObject? _awp;
-    private static ItemObject? _cartridges;
-
-    internal static ItemObject Akm =>
-        _akm ?? throw new InvalidOperationException("Druglord AKM is unavailable.");
-
-    internal static ItemObject Awp =>
-        _awp ?? throw new InvalidOperationException("Druglord AWP is unavailable.");
-
-    internal static ItemObject Cartridges =>
-        _cartridges ?? throw new InvalidOperationException("Druglord cartridges are unavailable.");
 
     internal static void EnsureLoaded(Game game)
     {
-        if (TryResolveItems(game))
-        {
-            LogReadyForNewGame(game);
-            return;
-        }
-
         string itemsPath = Path.Combine(
             ModuleHelper.GetModuleFullPath(ModuleId),
             "ModuleData",
@@ -51,8 +32,6 @@ internal static class FirearmItemRegistry
                 itemsPath);
         }
 
-        Debug.Print("Druglord: registering missing firearm items after game initialization.");
-
         XmlDocument document = new XmlDocument();
         document.Load(itemsPath);
 
@@ -62,6 +41,10 @@ internal static class FirearmItemRegistry
             throw new InvalidDataException(
                 "Druglord firearm item definitions must have an Items root node.");
         }
+
+        List<(string Id, XmlNode Node)> definitions =
+            new List<(string Id, XmlNode Node)>();
+        bool allItemsReady = true;
 
         foreach (XmlNode itemNode in root.ChildNodes)
         {
@@ -77,6 +60,22 @@ internal static class FirearmItemRegistry
                     "A Druglord firearm item definition is missing its id.");
             }
 
+            definitions.Add((itemId!, itemNode));
+            ItemObject? item =
+                game.ObjectManager.GetObject<ItemObject>(itemId);
+            allItemsReady &= item is not null && item.IsReady;
+        }
+
+        if (allItemsReady)
+        {
+            LogReadyForNewGame(game);
+            return;
+        }
+
+        Debug.Print("Druglord: registering missing firearm items after game initialization.");
+
+        foreach ((string itemId, XmlNode itemNode) in definitions)
+        {
             if (game.ObjectManager.GetObject<ItemObject>(itemId) is null &&
                 game.ObjectManager.CreateObjectFromXmlNode(itemNode) is null)
             {
@@ -85,10 +84,16 @@ internal static class FirearmItemRegistry
             }
         }
 
-        if (!TryResolveItems(game))
+        foreach ((string itemId, _) in definitions)
         {
-            throw new InvalidOperationException(
-                "Druglord firearm items were still unavailable after registration.");
+            ItemObject? item =
+                game.ObjectManager.GetObject<ItemObject>(itemId);
+            if (item is null || !item.IsReady)
+            {
+                throw new InvalidOperationException(
+                    $"Druglord firearm item '{itemId}' was still unavailable " +
+                    "after registration.");
+            }
         }
 
         LogReadyForNewGame(game);
@@ -104,31 +109,6 @@ internal static class FirearmItemRegistry
         }
 
         return usage.WeaponFlags.HasAnyFlag(WeaponFlags.FirearmAmmo);
-    }
-
-    private static bool TryResolveItems(Game game)
-    {
-        ItemObject? akm = game.ObjectManager.GetObject<ItemObject>(AkmId);
-        ItemObject? awp = game.ObjectManager.GetObject<ItemObject>(AwpId);
-        ItemObject? cartridges = game.ObjectManager.GetObject<ItemObject>(CartridgeId);
-
-        if (akm is null ||
-            awp is null ||
-            cartridges is null ||
-            !akm.IsReady ||
-            !awp.IsReady ||
-            !cartridges.IsReady)
-        {
-            _akm = null;
-            _awp = null;
-            _cartridges = null;
-            return false;
-        }
-
-        _akm = akm;
-        _awp = awp;
-        _cartridges = cartridges;
-        return true;
     }
 
     private static void LogReadyForNewGame(Game game)

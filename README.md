@@ -126,9 +126,10 @@ The module currently adds:
 
 - `druglord_akm`: `Musket` weapon class
 - `druglord_awp`: `Musket` weapon class
+- `druglord_ppsh41`: `Musket` weapon class
 - `druglord_cartridge`: shared firearm ammunition
 
-Both rifles temporarily use the light-crossbow animations and their imported
+The firearms temporarily use the light-crossbow animations and their imported
 meshes. Cartridges use the vanilla sling-ammo projectile. Gunshots produce a
 vanilla smoke burst and per-rifle custom sounds through `FirearmMissionLogic`.
 
@@ -144,10 +145,15 @@ The AWP model is by
 under `src\Druglord\_Module\AssetSources\Weapons\AWP`. See its attribution
 file for modification details.
 
+The PPSh-41 model is by Artem Goyko, is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and is included
+under `src\Druglord\_Module\AssetSources\Weapons\PPSh41`. See its attribution
+file in that directory for modification details.
+
 The main menu also includes **Druglord Debug Battle**. It launches a small land
 custom battle where every human agent on both sides receives a configured
 debug rifle and reserve cartridges, including reinforcements. The player
-commander receives both a loaded AKM and loaded AWP with reserve cartridges.
+commander receives the loaded AKM, AWP, and PPSh-41 with reserve cartridges.
 Passing `DruglordDebugBattle` on Bannerlord's command line triggers the same
 debug flow automatically.
 
@@ -162,6 +168,10 @@ The AWP is fully automatic at 0.5 rounds per second, has a five-round
 magazine, fires at 900 m/s, and uses a large vertical camera kick with minimal
 horizontal recoil and projectile spread.
 
+The PPSh-41 is fully automatic at approximately 900 rounds per minute, uses a
+71-round drum magazine, and fires at 488 m/s. It trades per-shot damage and
+accuracy for close-range volume of fire.
+
 Rifle behavior is data-driven through
 `src\Druglord\_Module\ModuleData\druglord_rifles.xml`. Each rifle item has its
 own ammunition, fire mode, magazine, timing, recoil, and spread values, so
@@ -174,9 +184,10 @@ position along Bannerlord's native character aim direction. Mounted shots
 always fire, but horizontal direction is clamped to the same body-rotation
 limits that separate the crosshair from the character's aim.
 
-The campaign troop tree adds **Assault**, equipped with an AKM, cartridges,
-a short sword, and Imperial Veteran Archer armor, and **Sniper**, equipped
-with an AWP, cartridges, a short sword, and Imperial Palatine Guard armor.
+The campaign troop tree adds **Assault**, equipped with either an AKM or
+PPSh-41, cartridges, a short sword, and Imperial Veteran Archer armor, and
+**Sniper**, equipped with an AWP, cartridges, a short sword, and Imperial
+Palatine Guard armor.
 Every culture's male peasant keeps its normal recruit upgrade and also gains
 the **Peasant > Assault > Sniper** firearm branch.
 

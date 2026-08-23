@@ -27,7 +27,6 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
 
     private readonly List<DebugLoadout> _loadouts =
         new List<DebugLoadout>();
-    private int _equippedAgentCount;
 
     public override void OnBehaviorInitialize()
     {
@@ -58,140 +57,112 @@ internal sealed class DebugFirearmLoadoutMissionLogic : MissionLogic
         }
     }
 
-    public override void OnAgentBuild(Agent agent, Banner banner)
-    {
-        base.OnAgentBuild(agent, banner);
-
-        if (!agent.IsHuman)
-        {
-            return;
-        }
-
-        if (_loadouts.Count == 0)
-        {
-            const string error = "Druglord debug weapons were not loaded.";
-            Debug.Print($"Druglord: {error}");
-            return;
-        }
-
-        DebugLoadout loadout =
-            _loadouts[_equippedAgentCount % _loadouts.Count];
-        EquipFirearmLoadout(agent, loadout);
-        _equippedAgentCount++;
-        Debug.Print(
-            $"Druglord: equipped {loadout.Firearm.Name} for agent " +
-            $"{agent.Index}; total {_equippedAgentCount}.");
-    }
-
     public override void OnDeploymentFinished()
     {
         base.OnDeploymentFinished();
-        EquipMainAgentLoadout();
+        SpawnDebugItems();
         InformationManager.DisplayMessage(
             new InformationMessage(
-                $"Druglord equipped {_equippedAgentCount} soldiers with " +
-                $"{_loadouts.Count} debug firearm loadout(s); the player " +
-                "carries both the AKM and AWP."));
+                $"Druglord dropped {_loadouts.Count} loaded debug firearm(s) " +
+                $"and {_loadouts.Count} ammunition stack(s) near the player."));
     }
 
-    private void EquipMainAgentLoadout()
+    private void SpawnDebugItems()
     {
         Agent? mainAgent = Mission.MainAgent;
         if (mainAgent is null || !mainAgent.IsHuman)
         {
             throw new InvalidOperationException(
-                "Druglord could not equip the debug battle player.");
+                "Druglord could not locate the debug battle player.");
         }
 
-        DebugLoadout akm = GetRequiredLoadout(FirearmItemRegistry.AkmId);
-        DebugLoadout awp = GetRequiredLoadout(FirearmItemRegistry.AwpId);
+        if (_loadouts.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "Druglord debug weapons were not loaded.");
+        }
 
-        EquipFirearm(
-            mainAgent,
-            akm,
-            EquipmentIndex.WeaponItemBeginSlot,
-            EquipmentIndex.Weapon1);
-        EquipFirearm(
-            mainAgent,
-            awp,
-            EquipmentIndex.Weapon2,
-            EquipmentIndex.Weapon3);
+        MatrixFrame agentFrame = mainAgent.Frame;
+        Vec3 forward = agentFrame.rotation.f;
+        forward.z = 0f;
+        if (forward.Normalize() <= 0.001f)
+        {
+            forward = Vec3.Forward;
+        }
+
+        Vec3 side = agentFrame.rotation.s;
+        side.z = 0f;
+        if (side.Normalize() <= 0.001f)
+        {
+            side = Vec3.Side;
+        }
+
+        const int loadoutsPerRow = 4;
+        const float firstRowDistance = 2.5f;
+        const float rowSpacing = 1.4f;
+        const float loadoutSpacing = 1.4f;
+        const float pairSpacing = 0.4f;
+        const float dropHeight = 0.75f;
+
+        for (int index = 0; index < _loadouts.Count; index++)
+        {
+            int row = index / loadoutsPerRow;
+            int column = index % loadoutsPerRow;
+            int loadoutsInRow = Math.Min(
+                loadoutsPerRow,
+                _loadouts.Count - (row * loadoutsPerRow));
+            float centeredColumn =
+                column - ((loadoutsInRow - 1) * 0.5f);
+            Vec3 pairCenter =
+                mainAgent.Position +
+                (forward * (firstRowDistance + (row * rowSpacing))) +
+                (side * (centeredColumn * loadoutSpacing)) +
+                (Vec3.Up * dropHeight);
+
+            DebugLoadout loadout = _loadouts[index];
+            MissionWeapon firearm = CreateLoadedFirearm(loadout);
+            SpawnWeaponDrop(
+                ref firearm,
+                agentFrame,
+                pairCenter - (side * pairSpacing));
+
+            MissionWeapon ammunition =
+                new MissionWeapon(loadout.Ammunition, null, null);
+            SpawnWeaponDrop(
+                ref ammunition,
+                agentFrame,
+                pairCenter + (side * pairSpacing));
+        }
 
         Debug.Print(
-            $"Druglord: equipped AKM and AWP for main agent " +
-            $"{mainAgent.Index}.");
+            $"Druglord: spawned {_loadouts.Count} firearm and ammunition " +
+            $"drop pair(s) near main agent {mainAgent.Index}.");
     }
 
-    private DebugLoadout GetRequiredLoadout(string itemId)
-    {
-        foreach (DebugLoadout loadout in _loadouts)
-        {
-            if (string.Equals(
-                    loadout.Settings.ItemId,
-                    itemId,
-                    StringComparison.Ordinal))
-            {
-                return loadout;
-            }
-        }
-
-        throw new InvalidOperationException(
-            $"Debug firearm loadout '{itemId}' is unavailable.");
-    }
-
-    private static void EquipFirearmLoadout(
-        Agent agent,
+    private static MissionWeapon CreateLoadedFirearm(
         DebugLoadout loadout)
-    {
-        EquipFirearm(
-            agent,
-            loadout,
-            EquipmentIndex.WeaponItemBeginSlot,
-            EquipmentIndex.Weapon1);
-
-        for (EquipmentIndex slot = EquipmentIndex.Weapon2;
-             slot <= EquipmentIndex.Weapon3;
-             slot++)
-        {
-            if (!agent.Equipment[slot].IsEmpty)
-            {
-                agent.RemoveEquippedWeapon(slot);
-            }
-        }
-    }
-
-    private static void EquipFirearm(
-        Agent agent,
-        DebugLoadout loadout,
-        EquipmentIndex firearmSlot,
-        EquipmentIndex ammunitionSlot)
     {
         MissionWeapon ammunitionStack =
             new MissionWeapon(loadout.Ammunition, null, null);
         MissionWeapon loadedAmmunition = ammunitionStack.Consume(
             loadout.Settings.MagazineSize);
-
         MissionWeapon firearm =
             new MissionWeapon(loadout.Firearm, null, null);
         firearm.ReloadAmmo(
             loadedAmmunition,
             firearm.ReloadPhaseCount);
-
-        EquipWeapon(
-            agent,
-            firearmSlot,
-            ref firearm);
-        EquipWeapon(
-            agent,
-            ammunitionSlot,
-            ref ammunitionStack);
+        return firearm;
     }
 
-    private static void EquipWeapon(
-        Agent agent,
-        EquipmentIndex slot,
-        ref MissionWeapon weapon)
+    private void SpawnWeaponDrop(
+        ref MissionWeapon weapon,
+        MatrixFrame orientation,
+        Vec3 position)
     {
-        agent.EquipWeaponWithNewEntity(slot, ref weapon);
+        orientation.origin = position;
+        Mission.SpawnWeaponWithNewEntity(
+            ref weapon,
+            TaleWorlds.MountAndBlade.Mission.WeaponSpawnFlags.WithPhysics,
+            orientation);
     }
 }
