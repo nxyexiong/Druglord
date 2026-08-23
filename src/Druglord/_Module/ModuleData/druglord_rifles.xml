@@ -53,7 +53,7 @@
     ammunition_item_id="druglord_cartridge"
     sound_event="druglord/firearms/gunshot3"
     debug_loadout="true"
-    fire_mode="Automatic"
+    fire_mode="SemiAutomatic"
     magazine_size="5"
     projectile_count_per_shot="1"
     is_explosive="false"

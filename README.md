@@ -176,9 +176,9 @@ lowered raises the AKM before shooting. Sustained fire kicks the view upward
 and adds random dispersion, reaching maximum recoil on the tenth consecutive
 shot. AKM input is hooked with Harmony.
 
-The AWP is fully automatic at 0.5 rounds per second, has a five-round
-magazine, fires at 900 m/s, and uses a large vertical camera kick with minimal
-horizontal recoil and projectile spread.
+The AWP uses trigger-per-shot fire at up to 0.5 rounds per second, has a
+five-round magazine, fires at 900 m/s, and uses a large vertical camera kick
+with minimal horizontal recoil and projectile spread.
 
 The PPSh-41 is fully automatic at approximately 900 rounds per minute, uses a
 71-round drum magazine, and fires at 488 m/s. It trades per-shot damage and
