@@ -26,8 +26,6 @@ internal static class DebugBattleLauncher
     private static bool _loadoutPending;
     private static bool _commandLineLaunchChecked;
 
-    internal static bool IsPending => _battleStartPending;
-
     internal static void Launch()
     {
         if (_battleStartPending)

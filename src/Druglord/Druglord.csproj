@@ -80,19 +80,37 @@
       Condition="!Exists('$(BannerlordGameDir)\Modules')"
       Text="Bannerlord Modules directory was not found at '$(BannerlordGameDir)\Modules'." />
     <ItemGroup>
-      <BuiltModuleFiles Include="$(ModuleOutputPath)**\*" />
+      <PublishedAssetPackages Include="$(ModuleOutputPath)AssetPackages\*.tpac" />
+      <RuntimeModuleFiles
+        Include="$(ModuleOutputPath)**\*"
+        Exclude="$(ModuleOutputPath)Assets\**\*;$(ModuleOutputPath)AssetSources\**\*;$(ModuleOutputPath)RuntimeDataCache\**\*;$(ModuleOutputPath)AssetPackages\.gitkeep" />
     </ItemGroup>
-    <Delete Files="$(BannerlordGameDir)\Modules\$(ModuleId)\bin\Win64_Shipping_Client\$(AssemblyName).pdb" />
+    <Error
+      Condition="'@(PublishedAssetPackages)' == ''"
+      Text="Deployment requires a published TPAC under '$(ModuleOutputPath)AssetPackages'." />
+    <RemoveDir Directories="$(BannerlordGameDir)\Modules\$(ModuleId)" />
     <Copy
-      SourceFiles="@(BuiltModuleFiles)"
-      DestinationFiles="@(BuiltModuleFiles->'$(BannerlordGameDir)\Modules\$(ModuleId)\%(RecursiveDir)%(Filename)%(Extension)')"
+      SourceFiles="@(RuntimeModuleFiles)"
+      DestinationFiles="@(RuntimeModuleFiles->'$(BannerlordGameDir)\Modules\$(ModuleId)\%(RecursiveDir)%(Filename)%(Extension)')"
       SkipUnchangedFiles="true" />
     <Message
       Importance="high"
-      Text="Deployed $(ModuleId) to '$(BannerlordGameDir)\Modules\$(ModuleId)'." />
+      Text="Clean-deployed $(ModuleId) runtime files to '$(BannerlordGameDir)\Modules\$(ModuleId)'." />
   </Target>
 
   <Target Name="DeployEditor" DependsOnTargets="Deploy">
+    <ItemGroup>
+      <EditorAssetFiles Include="$(MSBuildProjectDirectory)\_Module\Assets\**\*" />
+      <EditorSourceFiles Include="$(MSBuildProjectDirectory)\_Module\AssetSources\**\*" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(EditorAssetFiles)"
+      DestinationFiles="@(EditorAssetFiles->'$(BannerlordGameDir)\Modules\$(ModuleId)\Assets\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+    <Copy
+      SourceFiles="@(EditorSourceFiles)"
+      DestinationFiles="@(EditorSourceFiles->'$(BannerlordGameDir)\Modules\$(ModuleId)\AssetSources\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
     <Exec
       Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\tools\stage-bannerlord-editor.ps1&quot; -RepositoryRoot &quot;$(MSBuildProjectDirectory)\..\..&quot; -InstalledModulePath &quot;$(BannerlordGameDir)\Modules\$(ModuleId)&quot;" />
     <Message

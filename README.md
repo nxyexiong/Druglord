@@ -60,10 +60,11 @@ Each ZIP has a single top-level `Druglord` directory. During every invocation,
 5. Creates the ZIP and verifies the module manifest, DLL, and published TPAC.
 6. Rejects the package if it contains any development-only directories.
 
-Do not distribute `artifacts\Druglord` directly or use the MSBuild `Deploy`
-target to prepare a release. The project output initially includes authoring
-files; `build.cmd` performs the filtering and package validation required for
-a clean runtime installation.
+Do not distribute `artifacts\Druglord` directly. The project output initially
+includes authoring files; `build.cmd` performs the filtering and package
+validation required for a distributable release. The MSBuild `Deploy` target
+is only for local installation and cleanly replaces the installed module with
+runtime files, excluding `Assets`, `AssetSources`, and `RuntimeDataCache`.
 
 ### Publishing changed assets
 
@@ -86,9 +87,19 @@ client publication is self-contained for runtime use.
 
 ### Clean package deployment
 
-Close Bannerlord and its editor before replacing the installed module. Then
-extract the ZIP into the game's `Modules` directory, not into an additional
-`Druglord` subdirectory:
+Close Bannerlord and its editor before replacing the installed module. For a
+local build and clean deployment, run:
+
+```powershell
+dotnet build .\src\Druglord\Druglord.csproj `
+    --configuration Release `
+    --target:Deploy `
+    --nologo
+```
+
+The target deletes the existing `Modules\Druglord` directory and installs only
+runtime files. To deploy an already-built ZIP instead, extract it into the
+game's `Modules` directory, not into an additional `Druglord` subdirectory:
 
 ```powershell
 $game = 'C:\path\to\Mount & Blade II Bannerlord'

@@ -37,19 +37,6 @@ public sealed class SubModule : MBSubModuleBase
                 9990,
                 ShowVersion,
                 () => (false, new TextObject(string.Empty))));
-
-#if DEBUG
-        Module.CurrentModule.AddInitialStateOption(
-            new InitialStateOption(
-                "Druglord.DebugBattle",
-                new TextObject("{=!}Druglord Debug Battle"),
-                9991,
-                DebugBattleLauncher.Launch,
-                () => DebugBattleLauncher.IsPending
-                    ? (true, new TextObject("{=!}The debug battle is loading."))
-                    : (false, new TextObject(string.Empty)),
-                new TextObject("{=!}Launch a custom battle with 10 of every Druglord troop on both sides and all debug firearms dropped near the player.")));
-#endif
     }
 
     protected override void OnSubModuleUnloaded()
@@ -136,10 +123,10 @@ public sealed class SubModule : MBSubModuleBase
                 "Druglord",
                 $"Version {displayVersion}",
                 true,
-                false,
-                "OK",
-                string.Empty,
-                null,
+                true,
+                "Start Debug Battle",
+                "Close",
+                DebugBattleLauncher.Launch,
                 null),
             false,
             false);
