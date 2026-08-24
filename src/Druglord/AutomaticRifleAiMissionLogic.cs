@@ -247,7 +247,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
                      signal.Agent,
                      out float nextShotTime) &&
                  Mission.CurrentTime < nextShotTime) ||
-                !HasShootableEnemyTarget(signal.Agent) ||
+                !HasEngageableEnemyTarget(signal.Agent) ||
                 !TryGetWieldedRifle(
                     signal.Agent,
                     out EquipmentIndex rifleSlot,
@@ -297,7 +297,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
 
         if (Mission.MissionEnded ||
             Mission.IsMissionEnding ||
-            !HasShootableEnemyTarget(agent))
+            !HasEngageableEnemyTarget(agent))
         {
             CancelState(agent);
             return false;
@@ -706,7 +706,7 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         return false;
     }
 
-    private bool HasShootableEnemyTarget(Agent agent)
+    private static bool HasEngageableEnemyTarget(Agent agent)
     {
         Agent? target = agent.GetTargetAgent();
         if (target is null || !target.IsActive())
@@ -727,25 +727,23 @@ internal sealed class AutomaticRifleAiMissionLogic : MissionLogic
         Vec3 targetPosition = target.GetChestGlobalPosition();
         Vec2 horizontalOffset =
             (targetPosition - shooterPosition).AsVec2;
-        float missileRange =
+        float missileRange = MathF.Max(
+            agent.MaximumMissileRange,
             agent.GetMissileRangeWithHeightDifferenceAux(
-                targetPosition.z);
+                targetPosition.z));
+        const float rangeTolerance = 2f;
         if (missileRange <= 0f ||
             horizontalOffset.LengthSquared >
-            missileRange * missileRange)
+            (missileRange + rangeTolerance) *
+            (missileRange + rangeTolerance))
         {
             return false;
         }
 
-        Ray sightLine = new Ray(
-            shooterPosition,
-            targetPosition - shooterPosition,
-            true);
-        return !Mission.Scene.RayCastExcludingTwoEntities(
-            BodyFlags.CommonCollisionExcludeFlagsForMissile,
-            in sightLine,
-            agent.AgentVisuals.GetWeakEntity(),
-            target.AgentVisuals.GetWeakEntity());
+        // The native Crossbow attack request already includes its own
+        // visibility and friendly-obstruction decision. Rechecking it with a
+        // different raycast can consume the request without firing.
+        return true;
     }
 
     private static Vec3 GetMuzzlePosition(
